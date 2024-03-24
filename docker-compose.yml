@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  server:
+    build: ./
+    container_name: server
+    ports:
+      - 8085:8085
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - socialmedia
+
+  mongodb:
+    image: mvertes/alpine-mongo
+    container_name: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - dbdata6:/data/db
+    networks:
+      - socialmedia
+
+  minio-local:
+    image: minio/minio:latest
+    restart: always
+    container_name: minio-local
+    volumes:
+      - minio_storage:/data
+    environment:
+      - MINIO_ROOT_USER=socials
+      - MINIO_ROOT_PASSWORD=socials2024!
+    ports:
+      - 9000:9000
+      - 9001:9001
+    networks:
+      - socialmedia
+    command: "server /data --console-address :9001"
+
+volumes:
+  dbdata6:
+  minio_storage:
+
+networks:
+  socialmedia:
+    driver: bridge
