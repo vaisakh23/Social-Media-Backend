@@ -3,7 +3,10 @@ import { MetadataKeys } from "../utils/MetadataKeys ";
 export enum Methods {
   GET = "get",
   POST = "post",
+  PUT = "put",
+  DELETE = "delete",
 }
+
 export type RouterMetadata = {
   method: Methods;
   path: string;
@@ -36,3 +39,5 @@ const methodDecoratorFactory = (method: Methods) => {
 
 export const Get = methodDecoratorFactory(Methods.GET);
 export const Post = methodDecoratorFactory(Methods.POST);
+export const Put = methodDecoratorFactory(Methods.PUT);
+export const Delete = methodDecoratorFactory(Methods.DELETE);

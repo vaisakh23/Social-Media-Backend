@@ -13,14 +13,13 @@ const errorMiddleware = (
     const status: number = error.statusCode || 500;
     const message: string = error.message;
 
-    logger.error(
-      `[${req.method}] ${req.path} >> StatusCode:: ${status}, Message:: ${message}, Error:: ${error}`
-    );
-
     if (!(error instanceof HttpException)) {
+      logger.error(
+        `[${req.method}] ${req.path} >> StatusCode:: ${status}, Message:: ${message}, Error:: ${error}`
+      );
       error = new HttpException("Internal server error", 500);
     }
-    return res.status(status).json(ApiResponse.error(error));
+    return ApiResponse.error(res, error)
   } catch (error) {
     next(error);
   }
