@@ -11,7 +11,8 @@ export const verifyRefreshToken = (refreshToken: string) => {
         if (error || !payload) {
           return reject(new UnauthorizedException("Invalid refresh token"));
         }
-        return resolve(payload);
+        const { _id, email } = payload;
+        return resolve({ _id, email });
       }
     );
   });

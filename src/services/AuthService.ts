@@ -11,6 +11,7 @@ import User from "../models/User";
 import UserToken from "../models/UserToken";
 import UserType from "../types/UserType";
 import { verifyRefreshToken } from "../utils/verifyRefreshToken";
+import UnauthorizedException from "../exceptions/UnauthorizedException ";
 
 class AuthService {
   private user = User;
@@ -41,11 +42,17 @@ class AuthService {
     return { user, ...tokens };
   }
 
-  private async generateTokens(user: UserType) {
-    const accessToken = jwt.sign(user, ACCESS_TOKEN_SECRET, {
+  public async refreshToken(refreshToken: string) {
+    const payload = await this.verifyAndDeleteRefreshToken(refreshToken);
+    return await this.generateTokens(payload);
+  }
+
+  private async generateTokens(user: any) {
+    const { _id, email } = user;
+    const accessToken = jwt.sign({ _id, email }, ACCESS_TOKEN_SECRET, {
       expiresIn: ACCESS_TOKEN_TIMOUT,
     });
-    const refreshToken = jwt.sign(user, REFRESH_TOKEN_SECRET, {
+    const refreshToken = jwt.sign({ _id, email }, REFRESH_TOKEN_SECRET, {
       expiresIn: REFRESH_TOKEN_TIMOUT,
     });
 
@@ -56,17 +63,14 @@ class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async verifyAndDeleteRefreshToken(
-    userId: string,
-    refreshToken: string
-  ) {
+  private async verifyAndDeleteRefreshToken(refreshToken: string) {
+    const payload: any = await verifyRefreshToken(refreshToken);
     const userToken = await this.userToken.findOneAndDelete({
-      user: userId,
+      user: payload._id,
       refreshToken,
     });
-    if (userToken) {
-      return await verifyRefreshToken(refreshToken);
-    }
+    if (!userToken) throw new UnauthorizedException("Invalid refresh token");
+    return payload;
   }
 }
 

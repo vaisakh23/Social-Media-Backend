@@ -10,6 +10,7 @@ const errorMiddleware = (
   next: NextFunction
 ) => {
   try {
+    console.log(error);
     const status: number = error.statusCode || 500;
     const message: string = error.message;
 
@@ -19,7 +20,7 @@ const errorMiddleware = (
       );
       error = new HttpException("Internal server error", 500);
     }
-    return ApiResponse.error(res, error)
+    return ApiResponse.error(res, error);
   } catch (error) {
     next(error);
   }

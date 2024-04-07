@@ -30,6 +30,17 @@ class AuthController {
       next(error);
     }
   }
+
+  @Post("/refresh-token")
+  async refreshToken(req: Request, res: Response, next: NextFunction) {
+    try {
+      const refreshToken = req.body.refreshToken;
+      const accessData = await this.authService.refreshToken(refreshToken);
+      return ApiResponse.success(res, accessData, "refreshToken", 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default AuthController;
