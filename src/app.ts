@@ -6,6 +6,7 @@ import "reflect-metadata";
 import { DB_URL } from "./configs";
 import { controllers } from "./controllers";
 import errorMiddleware from "./middlewares/errorMiddleware";
+import { initialisePassport } from "./passportAuth/index";
 import { attachRoutes } from "./utils/attachRoutes";
 import logger from "./utils/logger";
 
@@ -18,6 +19,7 @@ class App {
     this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
+    this.initialisePassport();
   }
 
   public listen(port: number) {
@@ -52,6 +54,10 @@ class App {
 
   private initializeErrorHandling() {
     this.app.use(errorMiddleware);
+  }
+
+  private initialisePassport() {
+    initialisePassport(this.app);
   }
 }
 

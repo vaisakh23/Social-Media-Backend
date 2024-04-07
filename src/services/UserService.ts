@@ -1,23 +1,20 @@
 import { hash } from "bcrypt";
 import HttpException from "../exceptions/HttpException";
 import NotFoundException from "../exceptions/NotFoundException";
-import User from "../models/Users";
+import User from "../models/User";
 import UserType from "../types/UserType";
 
 class UserService {
   public users = User;
 
   public async findAllUser(): Promise<UserType[]> {
-    const users = await this.users.find().select("-password");
+    const users = await this.users.find();
     return users;
   }
 
   public async findUserById(userId: string): Promise<UserType> {
-    const findUser = await this.users
-      .findOne({ _id: userId })
-      .select("-password");
+    const findUser = await this.users.findOne({ _id: userId });
     if (!findUser) throw new NotFoundException("User doesn't exist");
-
     return findUser;
   }
 
@@ -36,8 +33,7 @@ class UserService {
       ...userData,
       password: hashedPassword,
     });
-    delete (createUserData as any).password;
-    return createUserData;
+    return createUserData.toObject();
   }
 
   public async updateUser(
@@ -45,9 +41,11 @@ class UserService {
     userData: UserType
   ): Promise<UserType> {
     if (userData.email) {
-      const findUser: UserType | null = await this.users.findOne({
-        email: userData.email,
-      });
+      const findUser = await this.users
+        .findOne({
+          email: userData.email,
+        })
+        .select("+password");
       if (findUser && findUser._id != userId)
         throw new HttpException(
           `This email ${userData.email} already exists`,
@@ -67,9 +65,7 @@ class UserService {
   }
 
   public async deleteUser(userId: string): Promise<UserType> {
-    const deleteUserById = await this.users
-      .findByIdAndDelete(userId)
-      .select("-password");
+    const deleteUserById = await this.users.findByIdAndDelete(userId);
     if (!deleteUserById) throw new NotFoundException("User doesn't exist");
     return deleteUserById;
   }

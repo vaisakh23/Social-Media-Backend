@@ -1,4 +1,5 @@
 import express from "express";
+import { BaseMetadata } from "../decorators/controller";
 import { RouterMetadata } from "../decorators/methods";
 import { MetadataKeys } from "./MetadataKeys ";
 
@@ -8,7 +9,7 @@ export const attachRoutes = (controllers: any[]) => {
   controllers.forEach((controllerClass) => {
     const controllerInstance = new controllerClass();
 
-    const basePath: string = Reflect.getMetadata(
+    const basePath: BaseMetadata = Reflect.getMetadata(
       MetadataKeys.BASE_PATH,
       controllerClass
     );
@@ -20,6 +21,8 @@ export const attachRoutes = (controllers: any[]) => {
     const exRouter = express.Router();
 
     routers.forEach(({ method, path, middlewares, handlerName }) => {
+      middlewares =
+        basePath.middlewares?.concat(middlewares || []) || middlewares;
       exRouter[method](
         path,
         middlewares ? [...middlewares] : [],
@@ -27,7 +30,7 @@ export const attachRoutes = (controllers: any[]) => {
       );
     });
 
-    router.use(basePath, exRouter);
+    router.use(basePath.basePath, exRouter);
   });
   return router;
 };

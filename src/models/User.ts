@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
 import UserType from "../types/UserType";
+import { schemaOptions } from "../utils/mongooseSchemaOptions";
 
 const userSchema: Schema = new Schema<UserType>(
   {
@@ -10,17 +11,10 @@ const userSchema: Schema = new Schema<UserType>(
     },
     password: {
       type: String,
-      required: true,
+      select: false,
     },
   },
-  {
-    toJSON: {
-      transform: function (doc, ret, game) {
-        delete ret.__v;
-        return ret;
-      },
-    },
-  }
+  schemaOptions
 );
 
 const User = model<UserType>("User", userSchema);

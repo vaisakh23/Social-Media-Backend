@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import Controller from "../decorators/controller";
 import { Delete, Get, Post, Put } from "../decorators/methods";
+import { authenticateUser } from "../middlewares/authenticateUser";
 import UserService from "../services/UserService";
 import UserType from "../types/UserType";
 import ApiResponse from "../utils/ApiResponse";
 
-@Controller("/user")
+@Controller("/user", [authenticateUser])
 class UserController {
   public userService = new UserService();
 

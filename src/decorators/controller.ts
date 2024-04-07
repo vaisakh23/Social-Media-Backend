@@ -1,8 +1,17 @@
 import { MetadataKeys } from "../utils/MetadataKeys ";
 
-const Controller = (basePath: string): ClassDecorator => {
+export type BaseMetadata = {
+  basePath: string;
+  middlewares?: ((...args: any[]) => any)[];
+};
+
+const Controller = (
+  basePath: string,
+  middlewares?: ((...args: any[]) => any)[]
+): ClassDecorator => {
   return (target) => {
-    Reflect.defineMetadata(MetadataKeys.BASE_PATH, basePath, target);
+    const baseMetadata: BaseMetadata = { basePath, middlewares };
+    Reflect.defineMetadata(MetadataKeys.BASE_PATH, baseMetadata, target);
   };
 };
 export default Controller;
