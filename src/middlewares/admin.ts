@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import passport from "passport";
-import UnauthorizedException from "../exceptions/UnauthorizedException";
+import PermissionExcepton from "../exceptions/PermissionExcepton";
+import { UserRoles } from "../utils/UserRoles";
 
-export const authenticateUser = (
+export const admin = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -11,8 +12,8 @@ export const authenticateUser = (
     if (error) {
       next(error);
     }
-    if (!user) {
-      next(new UnauthorizedException());
+    if (!user || user.role != UserRoles.ADMIN) {
+      next(new PermissionExcepton("Admin only access"));
     }
     res.locals.user = user;
     next();

@@ -1,4 +1,4 @@
-import UnauthorizedException from "../../exceptions/UnauthorizedException ";
+import UnauthorizedException from "../../exceptions/UnauthorizedException";
 import User from "../../models/User";
 import UserType from "../../types/UserType";
 

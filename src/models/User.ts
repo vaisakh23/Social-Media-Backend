@@ -1,6 +1,7 @@
 import { model, Schema } from "mongoose";
 import UserType from "../types/UserType";
 import { schemaOptions } from "../utils/mongooseSchemaOptions";
+import { UserRoles } from "../utils/UserRoles";
 
 const userSchema: Schema = new Schema<UserType>(
   {
@@ -13,6 +14,7 @@ const userSchema: Schema = new Schema<UserType>(
       type: String,
       select: false,
     },
+    role: String,
   },
   schemaOptions
 );

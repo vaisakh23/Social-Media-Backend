@@ -11,7 +11,7 @@ import User from "../models/User";
 import UserToken from "../models/UserToken";
 import UserType from "../types/UserType";
 import { verifyRefreshToken } from "../utils/verifyRefreshToken";
-import UnauthorizedException from "../exceptions/UnauthorizedException ";
+import UnauthorizedException from "../exceptions/UnauthorizedException";
 
 class AuthService {
   private user = User;

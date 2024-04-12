@@ -5,6 +5,7 @@ import { authenticateUser } from "../middlewares/authenticateUser";
 import UserService from "../services/UserService";
 import UserType from "../types/UserType";
 import ApiResponse from "../utils/ApiResponse";
+import { admin } from "../middlewares/admin";
 
 @Controller("/user", [authenticateUser])
 class UserController {
@@ -20,7 +21,7 @@ class UserController {
     }
   }
 
-  @Post("")
+  @Post("", [admin])
   public async createUser(req: Request, res: Response, next: NextFunction) {
     try {
       const userData: UserType = req.body;
@@ -47,9 +48,11 @@ class UserController {
   @Put("/:id")
   public async updateUser(req: Request, res: Response, next: NextFunction) {
     try {
+      const authUser = res.locals.user;
       const userId: string = req.params.id;
       const userData = req.body;
       const updateUserData = await this.userService.updateUser(
+        authUser,
         userId,
         userData
       );
@@ -62,8 +65,10 @@ class UserController {
   @Delete("/:id")
   public async deleteUser(req: Request, res: Response, next: NextFunction) {
     try {
+      const authUser = res.locals.user;
       const userId: string = req.params.id;
-      const deleteUserData: UserType = await this.userService.deleteUser(
+      const deleteUserData = await this.userService.deleteUser(
+        authUser,
         userId
       );
       return ApiResponse.success(res, deleteUserData, "deleted", 200);

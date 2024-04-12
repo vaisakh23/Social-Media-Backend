@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { REFRESH_TOKEN_SECRET } from "../configs";
-import UnauthorizedException from "../exceptions/UnauthorizedException ";
+import UnauthorizedException from "../exceptions/UnauthorizedException";
 
 export const verifyRefreshToken = (refreshToken: string) => {
   return new Promise(async (resolve, reject) => {

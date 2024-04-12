@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import passport from "passport";
-import UnauthorizedException from "../exceptions/UnauthorizedException ";
+import UnauthorizedException from "../exceptions/UnauthorizedException";
 
 export const loginMiddleware = (
   req: Request,

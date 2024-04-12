@@ -3,6 +3,8 @@ import HttpException from "../exceptions/HttpException";
 import NotFoundException from "../exceptions/NotFoundException";
 import User from "../models/User";
 import UserType from "../types/UserType";
+import { UserRoles } from "../utils/UserRoles";
+import PermissionExcepton from "../exceptions/PermissionExcepton";
 
 class UserService {
   public users = User;
@@ -12,7 +14,7 @@ class UserService {
     return users;
   }
 
-  public async findUserById(userId: string): Promise<UserType> {
+  public async findUserById(userId: string) {
     const findUser = await this.users.findOne({ _id: userId });
     if (!findUser) throw new NotFoundException("User doesn't exist");
     return findUser;
@@ -37,8 +39,9 @@ class UserService {
   }
 
   public async updateUser(
+    authUser: UserType,
     userId: string,
-    userData: UserType
+    userData: any
   ): Promise<UserType> {
     if (userData.email) {
       const findUser = await this.users
@@ -57,17 +60,23 @@ class UserService {
       const hashedPassword = await hash(userData.password, 10);
       userData = { ...userData, password: hashedPassword };
     }
-    const updateUserById = await this.users
-      .findByIdAndUpdate(userId, userData, { new: true })
-      .select("-password");
-    if (!updateUserById) throw new HttpException("User doesn't exist", 409);
-    return updateUserById;
+    let foundUser = await this.findUserById(userId);
+    this.ownerOrAdminOnly(authUser, foundUser);
+    Object.assign(foundUser, userData);
+    await foundUser.save();
+    return foundUser;
   }
 
-  public async deleteUser(userId: string): Promise<UserType> {
-    const deleteUserById = await this.users.findByIdAndDelete(userId);
-    if (!deleteUserById) throw new NotFoundException("User doesn't exist");
-    return deleteUserById;
+  public async deleteUser(authUser: UserType, userId: string) {
+    const foundUser = await this.findUserById(userId);
+    this.ownerOrAdminOnly(authUser, foundUser);
+    return await foundUser.deleteOne();
+  }
+
+  ownerOrAdminOnly(authUser: UserType, foundUser: UserType) {
+    if (authUser.role != UserRoles.ADMIN && authUser._id != foundUser._id) {
+      throw new PermissionExcepton();
+    }
   }
 }
 

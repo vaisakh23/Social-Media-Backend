@@ -1,5 +1,5 @@
 import { compare } from "bcrypt";
-import UnauthorizedException from "../../exceptions/UnauthorizedException ";
+import UnauthorizedException from "../../exceptions/UnauthorizedException";
 import User from "../../models/User";
 
 export const authenticateCredential = async (
