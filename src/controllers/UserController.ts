@@ -76,6 +76,36 @@ class UserController {
       next(error);
     }
   }
+
+  @Post("/follow/:id")
+  public async follow(req: Request, res: Response, next: NextFunction) {
+    try {
+      const authUser = res.locals.user;
+      const userIdToFollow: string = req.params.id;
+      const updateUserData = await this.userService.follow(
+        authUser,
+        userIdToFollow
+      );
+      return ApiResponse.success(res, updateUserData, "followed", 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  @Post("/unfollow/:id")
+  public async unFollow(req: Request, res: Response, next: NextFunction) {
+    try {
+      const authUser = res.locals.user;
+      const userIdToUnFollow: string = req.params.id;
+      const updateUserData = await this.userService.unFollow(
+        authUser,
+        userIdToUnFollow
+      );
+      return ApiResponse.success(res, updateUserData, "unFollowed", 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default UserController;

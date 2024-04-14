@@ -1,15 +1,15 @@
 import { hash } from "bcrypt";
 import HttpException from "../exceptions/HttpException";
 import NotFoundException from "../exceptions/NotFoundException";
+import PermissionExcepton from "../exceptions/PermissionExcepton";
 import User from "../models/User";
 import UserType from "../types/UserType";
 import { UserRoles } from "../utils/UserRoles";
-import PermissionExcepton from "../exceptions/PermissionExcepton";
 
 class UserService {
   public users = User;
 
-  public async findAllUser(): Promise<UserType[]> {
+  public async findAllUser() {
     const users = await this.users.find();
     return users;
   }
@@ -20,7 +20,7 @@ class UserService {
     return findUser;
   }
 
-  public async createUser(userData: UserType): Promise<UserType> {
+  public async createUser(userData: any) {
     const findUser: UserType | null = await this.users.findOne({
       email: userData.email,
     });
@@ -71,6 +71,38 @@ class UserService {
     const foundUser = await this.findUserById(userId);
     this.ownerOrAdminOnly(authUser, foundUser);
     return await foundUser.deleteOne();
+  }
+
+  public async follow(authUser: UserType, userIdToFollow: string) {
+    const userToFollow = await this.findUserById(userIdToFollow);
+    const updatedUser = await this.users
+      .findOneAndUpdate(
+        { _id: authUser._id },
+        { $addToSet: { followers: userToFollow } },
+        { new: true }
+      )
+      .populate("followers following");
+    await this.users.findOneAndUpdate(
+      { _id: userToFollow._id },
+      { $addToSet: { following: authUser } }
+    );
+    return updatedUser;
+  }
+
+  public async unFollow(authUser: UserType, userIdToUnfollow: string) {
+    const userToUnFollow = await this.findUserById(userIdToUnfollow);
+    const updatedUser = await this.users
+      .findOneAndUpdate(
+        { _id: authUser._id },
+        { $pull: { followers: userToUnFollow._id } },
+        { new: true }
+      )
+      .populate("followers following");
+    await this.users.findOneAndUpdate(
+      { _id: userToUnFollow._id },
+      { $pull: { following: authUser._id } }
+    );
+    return updatedUser;
   }
 
   ownerOrAdminOnly(authUser: UserType, foundUser: UserType) {
