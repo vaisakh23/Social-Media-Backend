@@ -25,7 +25,7 @@ export default class ApiResponse {
     });
   }
 
-  static validation(res: Response, errors: any[]) {
+  static validationFail(res: Response, errors: any[]) {
     return res.status(422).json({
       success: false,
       code: 422,

@@ -4,12 +4,15 @@ import { Post } from "../decorators/methods";
 import { loginMiddleware } from "../middlewares/loginMiddleware";
 import AuthService from "../services/AuthService";
 import ApiResponse from "../utils/ApiResponse";
+import UserValidation from "../validations/UserValidation";
+
+const userValidation = new UserValidation();
 
 @Controller("/auth")
 class AuthController {
   public authService = new AuthService();
 
-  @Post("/login", [loginMiddleware])
+  @Post("/login", [userValidation.loginRules(), loginMiddleware])
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const userDate = res.locals.user;
@@ -20,7 +23,7 @@ class AuthController {
     }
   }
 
-  @Post("/signup")
+  @Post("/signup", [userValidation.createRules()])
   async signup(req: Request, res: Response, next: NextFunction) {
     try {
       const userDate = req.body;
@@ -31,7 +34,7 @@ class AuthController {
     }
   }
 
-  @Post("/refresh-token")
+  @Post("/refresh-token", [userValidation.refreshTokenRules()])
   async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
       const refreshToken = req.body.refreshToken;

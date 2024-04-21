@@ -1,11 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import Controller from "../decorators/controller";
 import { Delete, Get, Post, Put } from "../decorators/methods";
+import { admin } from "../middlewares/admin";
 import { authenticateUser } from "../middlewares/authenticateUser";
 import UserService from "../services/UserService";
 import UserType from "../types/UserType";
 import ApiResponse from "../utils/ApiResponse";
-import { admin } from "../middlewares/admin";
+import UserValidation from "../validations/UserValidation";
+
+const userValidation = new UserValidation();
 
 @Controller("/user", [authenticateUser])
 class UserController {
@@ -21,7 +24,7 @@ class UserController {
     }
   }
 
-  @Post("", [admin])
+  @Post("", [admin, userValidation.createRules()])
   public async createUser(req: Request, res: Response, next: NextFunction) {
     try {
       const userData: UserType = req.body;
@@ -34,7 +37,7 @@ class UserController {
     }
   }
 
-  @Get("/:id")
+  @Get("/:id", [userValidation.IdRules()])
   public async getUserById(req: Request, res: Response, next: NextFunction) {
     try {
       const userId: string = req.params.id;
@@ -45,7 +48,7 @@ class UserController {
     }
   }
 
-  @Put("/:id")
+  @Put("/:id", [userValidation.updateRules()])
   public async updateUser(req: Request, res: Response, next: NextFunction) {
     try {
       const authUser = res.locals.user;
@@ -62,7 +65,7 @@ class UserController {
     }
   }
 
-  @Delete("/:id")
+  @Delete("/:id", [userValidation.IdRules()])
   public async deleteUser(req: Request, res: Response, next: NextFunction) {
     try {
       const authUser = res.locals.user;
@@ -77,7 +80,7 @@ class UserController {
     }
   }
 
-  @Post("/follow/:id")
+  @Post("/follow/:id", [userValidation.IdRules()])
   public async follow(req: Request, res: Response, next: NextFunction) {
     try {
       const authUser = res.locals.user;
@@ -92,7 +95,7 @@ class UserController {
     }
   }
 
-  @Post("/unfollow/:id")
+  @Post("/unfollow/:id", [userValidation.IdRules()])
   public async unFollow(req: Request, res: Response, next: NextFunction) {
     try {
       const authUser = res.locals.user;
