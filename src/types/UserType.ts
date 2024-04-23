@@ -1,4 +1,4 @@
-import mongoose, { Document, Types } from "mongoose";
+import { Document, Types } from "mongoose";
 
 type UserType = {
   _id: string;
