@@ -5,13 +5,27 @@ import PermissionExcepton from "../exceptions/PermissionExcepton";
 import User from "../models/User";
 import UserType from "../types/UserType";
 import { UserRoles } from "../utils/UserRoles";
+import ApiFeatures from "../utils/ApiFeatures";
 
 class UserService {
   public users = User;
 
-  public async findAllUser() {
-    const users = await this.users.find();
-    return users;
+  public async findAllUser(queryString: any) {
+    const searchFields = ["fullname", "username", "email", "mobile"];
+    const apiFeature = new ApiFeatures(
+      this.users.find(),
+      queryString,
+      searchFields
+    );
+    const { page = 1, limit = 9 } = queryString;
+    const total = await apiFeature.countDocuments();
+    const users = await apiFeature.executeQuery();
+    return {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      total,
+      users,
+    };
   }
 
   public async findUserById(userId: string) {

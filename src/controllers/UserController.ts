@@ -17,7 +17,9 @@ class UserController {
   @Get("")
   public async getUsers(req: Request, res: Response, next: NextFunction) {
     try {
-      const findAllUsersData: UserType[] = await this.userService.findAllUser();
+      const findAllUsersData = await this.userService.findAllUser(
+        req.query
+      );
       return ApiResponse.success(res, findAllUsersData, "findAll", 200);
     } catch (error) {
       next(error);
