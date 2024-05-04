@@ -1,6 +1,6 @@
 import { body, param } from "express-validator";
-import { validate } from "../utils/validate";
 import User from "../models/User";
+import { validate } from "../utils/validate";
 
 class UserValidation {
   fullName() {
@@ -44,13 +44,7 @@ class UserValidation {
       .isEmail()
       .withMessage("Invalid email format.")
       .bail()
-      .normalizeEmail()
-      .custom(async (value) => {
-        const existingUser = await User.findOne({ email: value });
-        if (existingUser) {
-          throw new Error("Email is already registered.");
-        }
-      });
+      .normalizeEmail();
   }
 
   password() {
