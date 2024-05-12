@@ -62,6 +62,30 @@ class PostController {
       next(error);
     }
   }
+
+  @Post("/:id/like")
+  public async likePost(req: Request, res: Response, next: NextFunction) {
+    try {
+      const authUser = res.locals.user;
+      const postId: string = req.params.id;
+      const updatedPost = await this.postService.likePost(authUser, postId);
+      return ApiResponse.success(res, updatedPost, "Post Liked", 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  @Post("/:id/unlike")
+  public async unlikePost(req: Request, res: Response, next: NextFunction) {
+    try {
+      const authUser = res.locals.user;
+      const postId: string = req.params.id;
+      const updatedPost = await this.postService.unlikePost(authUser, postId);
+      return ApiResponse.success(res, updatedPost, "Post unliked", 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default PostController;

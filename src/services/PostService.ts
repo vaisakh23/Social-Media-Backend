@@ -1,7 +1,6 @@
 import NotFoundException from "../exceptions/NotFoundException";
 import PermissionExcepton from "../exceptions/PermissionExcepton";
 import Post from "../models/Post";
-import PostType from "../types/PostType";
 import UserType from "../types/UserType";
 import ApiFeatures from "../utils/ApiFeatures";
 import { UserRoles } from "../utils/UserRoles";
@@ -40,7 +39,7 @@ class PostService {
     const findPost = await this.post
       .findOne({ _id: postId })
       .populate("owner", "avatar username");
-    if (!findPost) throw new NotFoundException("Post doesn't exist");
+    if (!findPost) throw new NotFoundException("Post not found");
     return findPost;
   }
 
@@ -56,6 +55,30 @@ class PostService {
     const foundPost = await this.findPostById(postId);
     this.ownerOrAdminOnly(authUser, foundPost);
     return await foundPost.deleteOne();
+  }
+
+  async likePost(authUser: UserType, postId: string) {
+    const updatedPost = await this.post.findOneAndUpdate(
+      { _id: postId },
+      { $addToSet: { likes: authUser._id } },
+      { new: true }
+    );
+    if (!updatedPost) {
+      throw new NotFoundException("Post not found");
+    }
+    return updatedPost;
+  }
+
+  async unlikePost(authUser: UserType, postId: string) {
+    const updatedPost = await this.post.findOneAndUpdate(
+      { _id: postId },
+      { $pull: { likes: authUser._id } },
+      { new: true }
+    );
+    if (!updatedPost) {
+      throw new NotFoundException("Post not found");
+    }
+    return updatedPost;
   }
 
   ownerOrAdminOnly(authUser: UserType, foundPost: any) {
