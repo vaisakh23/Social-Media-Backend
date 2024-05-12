@@ -3,6 +3,7 @@ import Controller from "../decorators/controller";
 import { Delete, Get, Post, Put } from "../decorators/methods";
 import { admin } from "../middlewares/admin";
 import { authenticateUser } from "../middlewares/authenticateUser";
+import uploadMiddleware from "../middlewares/uploadMiddleware";
 import UserService from "../services/UserService";
 import UserType from "../types/UserType";
 import ApiResponse from "../utils/ApiResponse";
@@ -17,19 +18,21 @@ class UserController {
   @Get("")
   public async getUsers(req: Request, res: Response, next: NextFunction) {
     try {
-      const findAllUsersData = await this.userService.findAllUser(
-        req.query
-      );
+      const findAllUsersData = await this.userService.findAllUser(req.query);
       return ApiResponse.success(res, findAllUsersData, "FindAll User", 200);
     } catch (error) {
       next(error);
     }
   }
 
-  @Post("", [admin, userValidation.createRules()])
+  @Post("", [
+    admin,
+    uploadMiddleware("single", "avatar"),
+    userValidation.createRules(),
+  ])
   public async createUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const userData: UserType = req.body;
+      const userData: UserType = { ...req.body, avatar: req.file };
       const createUserData: UserType = await this.userService.createUser(
         userData
       );
@@ -50,12 +53,15 @@ class UserController {
     }
   }
 
-  @Put("/:id", [userValidation.updateRules()])
+  @Put("/:id", [
+    uploadMiddleware("single", "avatar"),
+    userValidation.updateRules(),
+  ])
   public async updateUser(req: Request, res: Response, next: NextFunction) {
     try {
       const authUser = res.locals.user;
       const userId: string = req.params.id;
-      const userData = req.body;
+      const userData = { ...req.body, avatar: req.file };
       const updateUserData = await this.userService.updateUser(
         authUser,
         userId,

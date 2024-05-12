@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import Controller from "../decorators/controller";
 import { Post } from "../decorators/methods";
 import { loginMiddleware } from "../middlewares/loginMiddleware";
+import uploadMiddleware from "../middlewares/uploadMiddleware";
 import AuthService from "../services/AuthService";
 import ApiResponse from "../utils/ApiResponse";
 import UserValidation from "../validations/UserValidation";
@@ -23,10 +24,13 @@ class AuthController {
     }
   }
 
-  @Post("/signup", [userValidation.createRules()])
+  @Post("/signup", [
+    uploadMiddleware("single", "avatar"),
+    userValidation.createRules(),
+  ])
   async signup(req: Request, res: Response, next: NextFunction) {
     try {
-      const userDate = req.body;
+      const userDate = { ...req.body, avatar: req.file };
       const accessData = await this.authService.signup(userDate);
       return ApiResponse.success(res, accessData, "User Signup", 200);
     } catch (error) {
