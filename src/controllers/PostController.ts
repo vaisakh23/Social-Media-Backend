@@ -15,7 +15,7 @@ class PostController {
   public async getPosts(req: Request, res: Response, next: NextFunction) {
     try {
       const posts = await this.postService.findAllPost(req.query);
-      return ApiResponse.success(res, posts, "findAll", 200);
+      return ApiResponse.success(res, posts, "FindAll Post", 200);
     } catch (error) {
       next(error);
     }
@@ -29,7 +29,7 @@ class PostController {
         postData,
         res.locals.user._id
       );
-      return ApiResponse.success(res, createdPost, "created", 201);
+      return ApiResponse.success(res, createdPost, "Post Created", 201);
     } catch (error) {
       next(error);
     }
@@ -40,7 +40,7 @@ class PostController {
     try {
       const postId: string = req.params.id;
       const post = await this.postService.findPostById(postId);
-      return ApiResponse.success(res, post, "findOne", 200);
+      return ApiResponse.success(res, post, "FindOne Post", 200);
     } catch (error) {
       next(error);
     }
@@ -57,7 +57,7 @@ class PostController {
         postId,
         postData
       );
-      return ApiResponse.success(res, updatedPost, "updated", 200);
+      return ApiResponse.success(res, updatedPost, "Post Updated", 200);
     } catch (error) {
       next(error);
     }

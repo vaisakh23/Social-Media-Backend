@@ -17,7 +17,7 @@ class AuthController {
     try {
       const userDate = res.locals.user;
       const accessData = await this.authService.login(userDate);
-      return ApiResponse.success(res, accessData, "login", 200);
+      return ApiResponse.success(res, accessData, "User Login", 200);
     } catch (error) {
       next(error);
     }
@@ -28,7 +28,7 @@ class AuthController {
     try {
       const userDate = req.body;
       const accessData = await this.authService.signup(userDate);
-      return ApiResponse.success(res, accessData, "signup", 200);
+      return ApiResponse.success(res, accessData, "User Signup", 200);
     } catch (error) {
       next(error);
     }
@@ -39,7 +39,7 @@ class AuthController {
     try {
       const refreshToken = req.body.refreshToken;
       const accessData = await this.authService.refreshToken(refreshToken);
-      return ApiResponse.success(res, accessData, "refreshToken", 200);
+      return ApiResponse.success(res, accessData, "User RefreshToken", 200);
     } catch (error) {
       next(error);
     }

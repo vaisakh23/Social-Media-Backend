@@ -20,7 +20,7 @@ class UserController {
       const findAllUsersData = await this.userService.findAllUser(
         req.query
       );
-      return ApiResponse.success(res, findAllUsersData, "findAll", 200);
+      return ApiResponse.success(res, findAllUsersData, "FindAll User", 200);
     } catch (error) {
       next(error);
     }
@@ -33,7 +33,7 @@ class UserController {
       const createUserData: UserType = await this.userService.createUser(
         userData
       );
-      return ApiResponse.success(res, createUserData, "created", 201);
+      return ApiResponse.success(res, createUserData, "User Created", 201);
     } catch (error) {
       next(error);
     }
@@ -44,7 +44,7 @@ class UserController {
     try {
       const userId: string = req.params.id;
       const findOneUserData = await this.userService.findUserById(userId);
-      return ApiResponse.success(res, findOneUserData, "findOne", 200);
+      return ApiResponse.success(res, findOneUserData, "FindOne User", 200);
     } catch (error) {
       next(error);
     }
@@ -61,7 +61,7 @@ class UserController {
         userId,
         userData
       );
-      return ApiResponse.success(res, updateUserData, "updated", 200);
+      return ApiResponse.success(res, updateUserData, "User Updated", 200);
     } catch (error) {
       next(error);
     }
@@ -76,7 +76,7 @@ class UserController {
         authUser,
         userId
       );
-      return ApiResponse.success(res, deleteUserData, "deleted", 200);
+      return ApiResponse.success(res, deleteUserData, "User Deleted", 200);
     } catch (error) {
       next(error);
     }
@@ -91,7 +91,7 @@ class UserController {
         authUser,
         userIdToFollow
       );
-      return ApiResponse.success(res, updateUserData, "followed", 200);
+      return ApiResponse.success(res, updateUserData, "Followed User", 200);
     } catch (error) {
       next(error);
     }
@@ -106,7 +106,7 @@ class UserController {
         authUser,
         userIdToUnFollow
       );
-      return ApiResponse.success(res, updateUserData, "unFollowed", 200);
+      return ApiResponse.success(res, updateUserData, "UnFollowed User", 200);
     } catch (error) {
       next(error);
     }
