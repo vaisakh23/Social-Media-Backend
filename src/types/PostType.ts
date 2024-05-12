@@ -7,6 +7,6 @@ type PostType = Document & {
   comments: Types.ObjectId[];
   owner: Types.ObjectId;
   reports: Types.ObjectId[];
-};
+} & Document<unknown, {}, PostType>;
 
 export default PostType;

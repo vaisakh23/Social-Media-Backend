@@ -1,5 +1,3 @@
-import { ResolveSchemaOptions } from "mongoose";
-
 export const schemaOptions: any = {
   timestamps: true,
   toJSON: {
@@ -10,7 +8,6 @@ export const schemaOptions: any = {
   },
   toObject: {
     transform: function (doc: any, ret: any, game: any) {
-      delete ret.password;
       delete ret.__v;
       return ret;
     },

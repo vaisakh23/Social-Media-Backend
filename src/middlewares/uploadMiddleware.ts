@@ -1,7 +1,9 @@
 import { S3Client } from "@aws-sdk/client-s3";
+import { NextFunction, Request, Response } from "express";
 import multer from "multer";
 import multerS3 from "multer-s3";
 import {
+  BACKEND_URL,
   S3_ACCESS_KEY_ID,
   S3_BUCKET_NAME,
   S3_ENDPOINT,
@@ -32,4 +34,24 @@ const storage = multerS3({
   },
 });
 
-export const upload = multer({ storage });
+const upload = multer({ storage });
+
+const uploadMiddleware = (method: string, ...args: any[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    (upload as any)[method](...args)(req, res, function (err: any) {
+      if (err) throw err;
+      const currentDomain = "http://minio-local";
+      const newDomain = BACKEND_URL + ":9000";
+      if (req.files) {
+        req.files = (req.files as any).map((file: any) => {
+          return file.location.replace(currentDomain, newDomain);
+        });
+      }
+      if (req.file) {
+        req.file = (req.file as any).location.replace(currentDomain, newDomain);
+      }
+      next();
+    });
+  };
+};
+export default uploadMiddleware;

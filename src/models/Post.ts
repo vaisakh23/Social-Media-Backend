@@ -4,10 +4,12 @@ import { schemaOptions } from "../utils/mongooseSchemaOptions";
 
 const postSchema = new Schema<PostType>(
   {
-    content: String,
+    content: {
+      type: String,
+      required: true,
+    },
     images: {
       type: [String],
-      required: true,
     },
     likes: [
       {

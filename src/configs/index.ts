@@ -2,6 +2,7 @@ import { config } from "dotenv";
 config();
 
 export const {
+  BACKEND_URL = "http://localhost",
   PORT = 8085,
   DB_URL = "mongodb://localhost/database",
   SECRET_KEY = "secretKey",
