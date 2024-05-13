@@ -15,10 +15,10 @@ export default class ApiFeatures {
    * @param {QueryString} queryString - The query string containing search, sort, pagination, and filtering parameters.
    * @param {string[]} searchFields - The fields in the document to search against.
    */
-  constructor(query: any, queryString: QueryString, searchFields: string[]) {
+  constructor(query: any, queryString?: QueryString, searchFields?: string[]) {
     this.query = query;
-    this.queryString = queryString;
-    this.searchFields = searchFields;
+    this.queryString = queryString || {};
+    this.searchFields = searchFields || [];
     this.search();
     this.sort();
     this.paginating();

@@ -21,6 +21,17 @@ class PostController {
     }
   }
 
+  @Get("/feed")
+  public async getUserFeed(req: Request, res: Response, next: NextFunction) {
+    try {
+      const authUser = res.locals.user;
+      const posts = await this.postService.getUserFeed(authUser, req.query);
+      return ApiResponse.success(res, posts, "User Feed Retrieved", 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   @Post("", [uploadMiddleware("array", "images")])
   public async createPost(req: Request, res: Response, next: NextFunction) {
     try {
