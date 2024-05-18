@@ -6,11 +6,7 @@ import { Get } from "../decorators/methods";
 class IndexController {
   @Get("")
   public index(req: Request, res: Response, next: NextFunction) {
-    try {
-      return res.sendStatus(200);
-    } catch (error) {
-      next(error);
-    }
+    return res.sendStatus(200);
   }
 }
 export default IndexController;

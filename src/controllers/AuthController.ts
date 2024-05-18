@@ -15,13 +15,9 @@ class AuthController {
 
   @Post("/login", [userValidation.loginRules(), loginMiddleware])
   async login(req: Request, res: Response, next: NextFunction) {
-    try {
-      const userDate = res.locals.user;
-      const accessData = await this.authService.login(userDate);
-      return ApiResponse.success(res, accessData, "User Login", 200);
-    } catch (error) {
-      next(error);
-    }
+    const userDate = res.locals.user;
+    const accessData = await this.authService.login(userDate);
+    return ApiResponse.success(res, accessData, "User Login", 200);
   }
 
   @Post("/signup", [
@@ -29,24 +25,16 @@ class AuthController {
     userValidation.createRules(),
   ])
   async signup(req: Request, res: Response, next: NextFunction) {
-    try {
-      const userDate = { ...req.body, avatar: req.file };
-      const accessData = await this.authService.signup(userDate);
-      return ApiResponse.success(res, accessData, "User Signup", 200);
-    } catch (error) {
-      next(error);
-    }
+    const userDate = { ...req.body, avatar: req.file };
+    const accessData = await this.authService.signup(userDate);
+    return ApiResponse.success(res, accessData, "User Signup", 200);
   }
 
   @Post("/refresh-token", [userValidation.refreshTokenRules()])
   async refreshToken(req: Request, res: Response, next: NextFunction) {
-    try {
-      const refreshToken = req.body.refreshToken;
-      const accessData = await this.authService.refreshToken(refreshToken);
-      return ApiResponse.success(res, accessData, "User RefreshToken", 200);
-    } catch (error) {
-      next(error);
-    }
+    const refreshToken = req.body.refreshToken;
+    const accessData = await this.authService.refreshToken(refreshToken);
+    return ApiResponse.success(res, accessData, "User RefreshToken", 200);
   }
 }
 

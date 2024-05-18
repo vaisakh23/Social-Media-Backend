@@ -1,7 +1,17 @@
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { BaseMetadata } from "../decorators/controller";
 import { RouterMetadata } from "../decorators/methods";
 import { MetadataKeys } from "./MetadataKeys ";
+
+const tryCatchWrapper = (controllerFunc: Function) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await controllerFunc(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  };
+};
 
 export const attachRoutes = (controllers: any[]) => {
   const router = express.Router();
@@ -26,7 +36,9 @@ export const attachRoutes = (controllers: any[]) => {
       exRouter[method](
         path,
         middlewares ? [...middlewares] : [],
-        controllerInstance[String(handlerName)].bind(controllerInstance)
+        tryCatchWrapper(
+          controllerInstance[String(handlerName)].bind(controllerInstance)
+        )
       );
     });
 
