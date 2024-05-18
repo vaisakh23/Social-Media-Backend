@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import Controller from "../decorators/controller";
-import { Get, Post, Put } from "../decorators/methods";
+import { Delete, Get, Post, Put } from "../decorators/methods";
 import { authenticateUser } from "../middlewares/authenticateUser";
 import uploadMiddleware from "../middlewares/uploadMiddleware";
 import PostService from "../services/PostService";
@@ -69,6 +69,18 @@ class PostController {
         postData
       );
       return ApiResponse.success(res, updatedPost, "Post Updated", 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  @Delete("/:id", [])
+  public async deletePost(req: Request, res: Response, next: NextFunction) {
+    try {
+      const authUser = res.locals.user;
+      const postId: string = req.params.id;
+      const deletePost = await this.postService.deletePost(authUser, postId);
+      return ApiResponse.success(res, deletePost, "Post Deleted", 200);
     } catch (error) {
       next(error);
     }
