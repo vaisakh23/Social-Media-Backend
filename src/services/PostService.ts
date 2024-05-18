@@ -1,5 +1,5 @@
 import NotFoundException from "../exceptions/NotFoundException";
-import PermissionExcepton from "../exceptions/PermissionExcepton";
+import PermissionException from "../exceptions/PermissionException";
 import Post from "../models/Post";
 import UserType from "../types/UserType";
 import ApiFeatures from "../utils/ApiFeatures";
@@ -102,7 +102,7 @@ class PostService {
       authUser.role != UserRoles.ADMIN &&
       authUser._id != foundPost.owner._id
     ) {
-      throw new PermissionExcepton();
+      throw new PermissionException();
     }
   }
 }

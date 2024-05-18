@@ -1,7 +1,7 @@
 import { hash } from "bcrypt";
 import HttpException from "../exceptions/HttpException";
 import NotFoundException from "../exceptions/NotFoundException";
-import PermissionExcepton from "../exceptions/PermissionExcepton";
+import PermissionException from "../exceptions/PermissionException";
 import User from "../models/User";
 import UserType from "../types/UserType";
 import { UserRoles } from "../utils/UserRoles";
@@ -121,7 +121,7 @@ class UserService {
 
   ownerOrAdminOnly(authUser: UserType, foundUser: UserType) {
     if (authUser.role != UserRoles.ADMIN && authUser._id != foundUser._id) {
-      throw new PermissionExcepton();
+      throw new PermissionException();
     }
   }
 }
