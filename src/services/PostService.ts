@@ -1,12 +1,14 @@
 import NotFoundException from "../exceptions/NotFoundException";
 import PermissionException from "../exceptions/PermissionException";
+import Comment from "../models/Comment";
 import Post from "../models/Post";
 import UserType from "../types/UserType";
 import ApiFeatures from "../utils/ApiFeatures";
 import { UserRoles } from "../utils/UserRoles";
 
 class PostService {
-  public post = Post;
+  private post = Post;
+  private comment = Comment;
 
   async findAllPost(queryString: any) {
     const searchFields = ["content"];
@@ -70,6 +72,7 @@ class PostService {
   async deletePost(authUser: UserType, postId: string) {
     const foundPost = await this.findPostById(postId);
     this.ownerOrAdminOnly(authUser, foundPost);
+    await this.comment.deleteMany({ _id: { $in: foundPost.comments } });
     await foundPost.deleteOne();
     return foundPost;
   }
