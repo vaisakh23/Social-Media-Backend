@@ -3,6 +3,7 @@ import Controller from "../decorators/controller";
 import { Delete, Get, Post, Put } from "../decorators/methods";
 import { authenticateUser } from "../middlewares/authenticateUser";
 import uploadMiddleware from "../middlewares/uploadMiddleware";
+import CommentService from "../services/CommentService";
 import PostService from "../services/PostService";
 import PostType from "../types/PostType";
 import ApiResponse from "../utils/ApiResponse";
@@ -10,6 +11,7 @@ import ApiResponse from "../utils/ApiResponse";
 @Controller("/post", [authenticateUser])
 class PostController {
   public postService = new PostService();
+  public commentService = new CommentService();
 
   @Get("")
   public async getPosts(req: Request, res: Response, next: NextFunction) {
@@ -18,9 +20,9 @@ class PostController {
   }
 
   @Get("/feed")
-  public async getUserFeed(req: Request, res: Response, next: NextFunction) {
+  public async getFeed(req: Request, res: Response, next: NextFunction) {
     const authUser = res.locals.user;
-    const posts = await this.postService.getUserFeed(authUser, req.query);
+    const posts = await this.postService.getFeed(authUser, req.query);
     return ApiResponse.success(res, posts, "User Feed Retrieved", 200);
   }
 
@@ -75,7 +77,14 @@ class PostController {
     const authUser = res.locals.user;
     const postId: string = req.params.id;
     const updatedPost = await this.postService.unlikePost(authUser, postId);
-    return ApiResponse.success(res, updatedPost, "Post unliked", 200);
+    return ApiResponse.success(res, updatedPost, "Post Unliked", 200);
+  }
+
+  @Get("/:id/comments")
+  public async getComments(req: Request, res: Response, next: NextFunction) {
+    const postId: string = req.params.id;
+    const comments = await this.commentService.getComments(postId, req.query);
+    return ApiResponse.success(res, comments, "Comments Retrieved", 200);
   }
 }
 

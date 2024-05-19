@@ -8,23 +8,24 @@ const commentSchema: Schema<CommentType> = new Schema(
       type: String,
       required: true,
     },
-    tag: Object,
     reply: {
       type: Schema.Types.ObjectId,
-      ref: "user",
+      ref: "Comment",
     },
-    likes: [{ type: Schema.Types.ObjectId, ref: "user" }],
+    likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
     owner: {
       type: Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
     },
     postId: {
       type: Schema.Types.ObjectId,
       required: true,
+      ref: "Post",
     },
-    postUserId: {
+    postOwnerId: {
       type: Schema.Types.ObjectId,
       required: true,
+      ref: "User",
     },
   },
   schemaOptions

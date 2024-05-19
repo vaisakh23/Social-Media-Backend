@@ -27,7 +27,7 @@ class PostService {
     };
   }
 
-  async getUserFeed(authUser: UserType, queryString: any) {
+  async getFeed(authUser: UserType, queryString: any) {
     const apiFeature = new ApiFeatures(
       this.post.find({ owner: [authUser._id, ...(authUser?.following || [])] })
     );
@@ -70,7 +70,8 @@ class PostService {
   async deletePost(authUser: UserType, postId: string) {
     const foundPost = await this.findPostById(postId);
     this.ownerOrAdminOnly(authUser, foundPost);
-    return await foundPost.deleteOne();
+    await foundPost.deleteOne();
+    return foundPost;
   }
 
   async likePost(authUser: UserType, postId: string) {
