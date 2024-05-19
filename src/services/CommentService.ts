@@ -165,6 +165,26 @@ class CommentService {
     return comment;
   }
 
+  async likeComment(commentId: string, userId: string) {
+    const updatedComment = await this.comment.findOneAndUpdate(
+      { _id: commentId },
+      { $addToSet: { likes: userId } },
+      { new: true }
+    );
+    if (!updatedComment) throw new NotFoundException("Comment not found");
+    return updatedComment;
+  }
+
+  async unlikeComment(commentId: string, userId: string) {
+    const updatedComment = await this.comment.findOneAndUpdate(
+      { _id: commentId },
+      { $pull: { likes: userId } },
+      { new: true }
+    );
+    if (!updatedComment) throw new NotFoundException("Comment not found");
+    return updatedComment;
+  }
+
   private ownerOnly(userId: any, foundComment: any) {
     if (userId.toString() !== foundComment.owner._id.toString()) {
       throw new PermissionException();

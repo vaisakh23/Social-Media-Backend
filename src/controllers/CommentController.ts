@@ -20,7 +20,7 @@ class CommentController {
       content,
       reply
     );
-    return ApiResponse.success(res, comment, "Comment added", 201);
+    return ApiResponse.success(res, comment, "Comment Added", 201);
   }
 
   @Put("/:commentId")
@@ -33,7 +33,7 @@ class CommentController {
       authUser._id,
       content
     );
-    return ApiResponse.success(res, updatedComment, "Comment updated", 200);
+    return ApiResponse.success(res, updatedComment, "Comment Updated", 200);
   }
 
   @Delete("/:commentId")
@@ -44,7 +44,29 @@ class CommentController {
       commentId,
       authUser._id
     );
-    return ApiResponse.success(res, deletedComment, "Comment deleted", 200);
+    return ApiResponse.success(res, deletedComment, "Comment Deleted", 200);
+  }
+
+  @Post("/:commentId/like")
+  public async likeComment(req: Request, res: Response) {
+    const { commentId } = req.params;
+    const authUser = res.locals.user;
+    const comment = await this.commentService.likeComment(
+      commentId,
+      authUser._id
+    );
+    return ApiResponse.success(res, comment, "Comment Liked", 200);
+  }
+
+  @Post("/:commentId/unlike")
+  public async unlikeComment(req: Request, res: Response) {
+    const { commentId } = req.params;
+    const authUser = res.locals.user;
+    const comment = await this.commentService.unlikeComment(
+      commentId,
+      authUser._id
+    );
+    return ApiResponse.success(res, comment, "Comment Unliked", 200);
   }
 }
 
