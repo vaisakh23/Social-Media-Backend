@@ -15,7 +15,6 @@ class CommentService {
     userId: string,
     postOwnerId: string,
     content: string,
-    tag?: object,
     reply?: string
   ) {
     const post = await this.post.findById(postId);
@@ -28,7 +27,6 @@ class CommentService {
       postId,
       postOwnerId,
       content,
-      tag,
       reply,
       owner: userId,
     });

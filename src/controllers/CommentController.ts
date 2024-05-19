@@ -18,7 +18,6 @@ class CommentController {
       authUser._id,
       postOwnerId,
       content,
-      tag,
       reply
     );
     return ApiResponse.success(res, comment, "Comment added", 201);
