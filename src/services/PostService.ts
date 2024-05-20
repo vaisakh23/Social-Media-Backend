@@ -31,7 +31,10 @@ class PostService {
 
   async getFeed(authUser: UserType, queryString: any) {
     const apiFeature = new ApiFeatures(
-      this.post.find({ owner: [authUser._id, ...(authUser?.following || [])] })
+      this.post.find({
+        owner: { $in: [authUser._id, ...(authUser?.following || [])] },
+        reports: { $ne: authUser._id }, // Exclude posts reported by the authUser
+      })
     );
     const { page = 1, limit = 9 } = queryString;
     const total = await apiFeature.countDocuments();
@@ -99,6 +102,23 @@ class PostService {
       throw new NotFoundException("Post not found");
     }
     return updatedPost;
+  }
+
+  async reportPost(postId: string, authUser: UserType) {
+    const report = await this.post.findOneAndUpdate(
+      { _id: postId },
+      { $addToSet: { reports: authUser._id } },
+      { new: true }
+    );
+    if (!report) {
+      throw new NotFoundException("Post not found");
+    }
+    // Delete Post if the number of reports exceeds 5
+    if (report.reports.length > 5) {
+      await report.deleteOne();
+      await this.comment.deleteMany({ _id: { $in: report.comments } });
+    }
+    return report;
   }
 
   ownerOrAdminOnly(authUser: UserType, foundPost: any) {
