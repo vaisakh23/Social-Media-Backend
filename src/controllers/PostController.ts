@@ -19,6 +19,13 @@ class PostController {
     return ApiResponse.success(res, posts, "FindAll Post", 200);
   }
 
+  @Get("/user_posts")
+  async getUserPosts(req: Request, res: Response) {
+    const authUser = res.locals.user;
+    const posts = await this.postService.getUserPosts(authUser, req.query);
+    return ApiResponse.success(res, posts, "User Posts Retrieved", 200);
+  }
+
   @Get("/feed")
   public async getFeed(req: Request, res: Response) {
     const authUser = res.locals.user;

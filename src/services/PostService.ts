@@ -29,6 +29,23 @@ class PostService {
     };
   }
 
+  async getUserPosts(authUser: UserType, queryString: any) {
+    const apiFeature = new ApiFeatures(
+      this.post.find({ owner: authUser._id }),
+      queryString
+    );
+    const { page = 1, limit = 9 } = queryString;
+    const total = await apiFeature.countDocuments();
+    const query = apiFeature.executeQuery();
+    const posts = await query.populate("owner", "avatar username");
+    return {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      total,
+      posts,
+    };
+  }
+
   async getFeed(authUser: UserType, queryString: any) {
     const apiFeature = new ApiFeatures(
       this.post.find({
