@@ -1,57 +1,47 @@
-import { S3Client } from "@aws-sdk/client-s3";
+import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
 import multer from "multer";
-import multerS3 from "multer-s3";
-import {
-  BACKEND_URL,
-  S3_ACCESS_KEY_ID,
-  S3_BUCKET_NAME,
-  S3_ENDPOINT,
-  S3_FORCE_STYLE,
-  S3_REGION,
-  S3_SECRET_ACCESS_KEY,
-} from "../configs";
+import { processImage } from "../utils/processImage";
+import { uploadToS3 } from "../utils/uploadToS3";
 
-const s3 = new S3Client({
-  region: S3_REGION,
-  endpoint: S3_ENDPOINT,
-  credentials: {
-    accessKeyId: S3_ACCESS_KEY_ID,
-    secretAccessKey: S3_SECRET_ACCESS_KEY,
-  },
-  forcePathStyle: Boolean(S3_FORCE_STYLE),
-});
+const upload = multer();
 
-const storage = multerS3({
-  s3,
-  bucket: S3_BUCKET_NAME,
-  contentType: multerS3.AUTO_CONTENT_TYPE,
-  metadata: (req, file, cb) => {
-    cb(null, { fieldName: file.fieldname });
-  },
-  key: (req, file, cb) => {
-    cb(null, Date.now().toString());
-  },
-});
-
-const upload = multer({ storage });
+// Function to generate a hashed key for the file
+const generateHashedKey = (originalname: string): string => {
+  const timestamp = Date.now().toString();
+  const hash = crypto
+    .createHash("sha256")
+    .update(originalname + timestamp)
+    .digest("hex");
+  const fileExtension = originalname.split(".").pop();
+  return `${hash}.${fileExtension}`;
+};
 
 const uploadMiddleware = (method: string, ...args: any[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    (upload as any)[method](...args)(req, res, function (err: any) {
-      if (err) throw err;
-      const currentDomain = "http://minio-local";
-      const newDomain = BACKEND_URL + ":9000";
+    (upload as any)[method](...args)(req, res, async function (err: any) {
+      if (err) return next(err);
+
+      // Utility function to process and upload a image
+      const processAndUploadImage = async (file: any): Promise<any> => {
+        const processedBuffer = await processImage(file.buffer, file.mimetype);
+        const key = generateHashedKey(file.originalname);
+        return await uploadToS3(key, processedBuffer, file);
+      };
+
+      // Multiple files
       if (req.files) {
-        req.files = (req.files as any).map((file: any) => {
-          return file.location.replace(currentDomain, newDomain);
-        });
+        req.files = await Promise.all(
+          (req.files as any).map(processAndUploadImage)
+        );
       }
+      // single file
       if (req.file) {
-        req.file = (req.file as any).location.replace(currentDomain, newDomain);
+        req.file = await processAndUploadImage(req.file as any);
       }
       next();
     });
   };
 };
+
 export default uploadMiddleware;
