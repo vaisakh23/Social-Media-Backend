@@ -2,6 +2,7 @@ import NotFoundException from "../exceptions/NotFoundException";
 import PermissionException from "../exceptions/PermissionException";
 import Comment from "../models/Comment";
 import Post from "../models/Post";
+import User from "../models/User";
 import UserType from "../types/UserType";
 import ApiFeatures from "../utils/ApiFeatures";
 import { UserRoles } from "../utils/UserRoles";
@@ -9,6 +10,7 @@ import { UserRoles } from "../utils/UserRoles";
 class PostService {
   private post = Post;
   private comment = Comment;
+  private user = User;
 
   async findAllPost(queryString: any) {
     const searchFields = ["content"];
@@ -60,6 +62,41 @@ class PostService {
     return {
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
+      total,
+      posts,
+    };
+  }
+
+  async getExplorePosts(authUser: UserType, queryString: any) {
+    const page = parseInt(queryString?.page || 1, 10);
+    const limit = parseInt(queryString?.limit || 9, 10);
+    const skip = (page - 1) * limit;
+    const excludeUsers = [...(authUser.following || []), authUser._id];
+    const posts = await this.post.aggregate([
+      {
+        $match: {
+          owner: { $nin: excludeUsers },
+          reports: { $ne: authUser._id },
+        },
+      },
+      { $sample: { size: limit + skip } }, // Get enough documents for skip + limit
+      { $skip: skip },
+      { $limit: limit },
+      { $project: { __v: 0 } },
+    ]);
+
+    await this.user.populate(posts, {
+      path: "owner",
+      select: "avatar username email",
+    });
+    const total = await this.post.countDocuments({
+      owner: { $nin: excludeUsers },
+      reports: { $ne: authUser._id },
+    });
+
+    return {
+      page,
+      limit,
       total,
       posts,
     };

@@ -33,6 +33,13 @@ class PostController {
     return ApiResponse.success(res, posts, "User Feed Retrieved", 200);
   }
 
+  @Get("/explore")
+  public async getExplorePosts(req: Request, res: Response) {
+    const authUser = res.locals.user;
+    const posts = await this.postService.getExplorePosts(authUser, req.query);
+    return ApiResponse.success(res, posts, "Explore Posts Retrieved", 200);
+  }
+
   @Post("", [uploadMiddleware("array", "images")])
   public async createPost(req: Request, res: Response) {
     const postData = { ...req.body, images: req.files };
