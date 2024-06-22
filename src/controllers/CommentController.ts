@@ -4,12 +4,15 @@ import { Delete, Post, Put } from "../decorators/methods";
 import { authenticateUser } from "../middlewares/authenticateUser";
 import CommentService from "../services/CommentService";
 import ApiResponse from "../utils/ApiResponse";
+import CommentValidation from "../validations/CommentValidation";
+
+const commentValidation = new CommentValidation();
 
 @Controller("/comment", [authenticateUser])
 class CommentController {
   public commentService = new CommentService();
 
-  @Post("")
+  @Post("", [commentValidation.createRules()])
   public async addComment(req: Request, res: Response) {
     const { postId, content, tag, reply, postOwnerId } = req.body;
     const authUser = res.locals.user;
@@ -23,7 +26,7 @@ class CommentController {
     return ApiResponse.success(res, comment, "Comment Added", 201);
   }
 
-  @Put("/:commentId")
+  @Put("/:commentId", [commentValidation.updateRules()])
   public async updateComment(req: Request, res: Response) {
     const { commentId } = req.params;
     const { content } = req.body;
@@ -36,7 +39,7 @@ class CommentController {
     return ApiResponse.success(res, updatedComment, "Comment Updated", 200);
   }
 
-  @Delete("/:commentId")
+  @Delete("/:commentId", [commentValidation.interactionRules()])
   public async deleteComment(req: Request, res: Response) {
     const { commentId } = req.params;
     const authUser = res.locals.user;
@@ -47,7 +50,7 @@ class CommentController {
     return ApiResponse.success(res, deletedComment, "Comment Deleted", 200);
   }
 
-  @Post("/:commentId/like")
+  @Post("/:commentId/like", [commentValidation.interactionRules()])
   public async likeComment(req: Request, res: Response) {
     const { commentId } = req.params;
     const authUser = res.locals.user;
@@ -58,7 +61,7 @@ class CommentController {
     return ApiResponse.success(res, comment, "Comment Liked", 200);
   }
 
-  @Post("/:commentId/unlike")
+  @Post("/:commentId/unlike", [commentValidation.interactionRules()])
   public async unlikeComment(req: Request, res: Response) {
     const { commentId } = req.params;
     const authUser = res.locals.user;
