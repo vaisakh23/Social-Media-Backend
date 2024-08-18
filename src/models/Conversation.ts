@@ -4,12 +4,6 @@ import { schemaOptions } from "../utils/mongooseSchemaOptions";
 
 const conversationSchema: Schema = new Schema<ConversationType>(
   {
-    name: {
-      type: String,
-    },
-    image: {
-      type: String,
-    },
     type: {
       type: String,
       enum: ConversationTypes,

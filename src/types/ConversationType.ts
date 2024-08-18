@@ -14,8 +14,6 @@ type ConversationType = Document & {
   lastMessageSender: Schema.Types.ObjectId;
   lastMessageToOthers: string;
   lastMessageToSender: string;
-  name?: string;
-  image?: string;
 } & Document<unknown, {}, ConversationType>;
 
 export default ConversationType;
