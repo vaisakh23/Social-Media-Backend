@@ -19,33 +19,33 @@ class ConversationService {
     const group = new Group({
       name: groupName,
       image: groupImage,
-      groupImage: groupImage,
       createdBy: authUser.id,
     });
 
     await group.save();
 
-    const groupMembers = members.map((memberId: string) => ({
+    let groupMembers = [];
+    const membersObj = members?.map((memberId: string) => ({
       user: memberId,
       role: "member",
       active: true,
     }));
-
+    if (membersObj) groupMembers.push(...membersObj);
     groupMembers.push({
       user: authUser.id,
       role: "admin",
       active: true,
     });
 
-    await Member.insertMany(groupMembers);
+    const insertedMembers = await Member.insertMany(groupMembers);
 
     const conversation = new Conversation({
       type: "group",
       group: group._id,
-      members: [...members, authUser.id],
+      members: insertedMembers,
       lastMessageDate: new Date(),
       lastMessageSender: authUser.id,
-      lastMessageToOthers: `Group created by ${authUser.username}`,
+      lastMessageToOthers: `Group created by ${authUser.username}`, // Todo - instead get latest Message stored in frontend
       lastMessageToSender: "Group created by you",
     });
 
