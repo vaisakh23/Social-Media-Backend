@@ -2,6 +2,9 @@ import Conversation from "../models/Conversation";
 import Group from "../models/Group";
 import Member from "../models/Member";
 import Message from "../models/Message";
+import { ConversationTypes } from "../types/ConversationType";
+import { MemberRoles } from "../types/MemberType";
+import { MessageTypes } from "../types/MessageType";
 import UserType from "../types/UserType";
 
 class ConversationService {
@@ -27,20 +30,20 @@ class ConversationService {
     let groupMembers = [];
     const membersObj = members?.map((memberId: string) => ({
       user: memberId,
-      role: "member",
+      role: MemberRoles.MEMBER,
       active: true,
     }));
     if (membersObj) groupMembers.push(...membersObj);
     groupMembers.push({
       user: authUser.id,
-      role: "admin",
+      role: MemberRoles.ADMIN,
       active: true,
     });
 
     const insertedMembers = await Member.insertMany(groupMembers);
 
     const conversation = new Conversation({
-      type: "group",
+      type: ConversationTypes.GROUP,
       group: group._id,
       members: insertedMembers,
       lastMessageDate: new Date(),
@@ -52,7 +55,7 @@ class ConversationService {
     await conversation.save();
 
     const message = new Message({
-      type: "system",
+      type: MessageTypes.SYSTEM,
       conversation: conversation._id,
       sender: authUser.id,
       systemMessageToOthers: `Group created by ${authUser.username}`,
