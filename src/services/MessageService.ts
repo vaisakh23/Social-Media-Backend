@@ -40,7 +40,7 @@ class MessageService {
       { _id: conversationId },
       {
         $set: {
-          lastMessageDate: new Date(),
+          lastMessageDate: message.createdAt,
           lastMessageSender: userId,
           lastMessageToOthers: text,
         },
