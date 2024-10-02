@@ -1,7 +1,8 @@
-import Message from "../models/Message";
+import HttpException from "../exceptions/HttpException";
 import Conversation from "../models/Conversation";
 import Member from "../models/Member";
-import HttpException from "../exceptions/HttpException";
+import Message from "../models/Message";
+import { MessageTypes } from "../types/MessageType";
 
 class MessageService {
   public async sendMessage(
@@ -27,7 +28,7 @@ class MessageService {
 
     // Create and save the message
     const message = new Message({
-      type: "user",
+      type: MessageTypes.USER,
       conversation: conversationId,
       sender: userId,
       text: text,
@@ -91,6 +92,72 @@ class MessageService {
 
     return message;
   }
+
+  public async unsendMessage(messageId: string, userId: string) {
+    const message = await Message.findOne({ _id: messageId });
+
+    if (!message) {
+      throw new HttpException("Message not found", 404);
+    }
+
+    if (message.sender?.toString() !== userId.toString()) {
+      throw new HttpException("You can only unsend your own messages", 403);
+    }
+    const conversation = await Conversation.findOne({
+      _id: message.conversation,
+    });
+
+    if (!conversation) {
+      throw new HttpException("Conversation not found", 404);
+    }
+
+    // If this message is the last message, update the conversation
+    if (
+      conversation?.lastMessageSender.toString() === userId.toString() &&
+      (message.createdAt?.toISOString() ===
+        conversation.lastMessageDate.toISOString() ||
+        message.updatedAt?.toISOString() ===
+          conversation.lastMessageDate.toISOString()) // For edited message
+    ) {
+      // Find the next last message to update the conversation
+      const previousMessage = await Message.findOne({
+        conversation: conversation._id,
+        _id: { $ne: messageId }, // Find any message other than the one being unsent
+      }).sort({ createdAt: -1 }); // Sort by the most recent message
+
+      if (previousMessage) {
+        if (previousMessage.type === MessageTypes.SYSTEM) {
+          await Conversation.updateOne(
+            { _id: conversation._id },
+            {
+              $set: {
+                lastMessageDate: previousMessage.updatedAt,
+                lastMessageSender: previousMessage.sender,
+                lastMessageToOthers: previousMessage.systemMessageToOthers,
+                lastMessageToSender: previousMessage.systemMessageToSender,
+              },
+            }
+          );
+        } else {
+          await Conversation.updateOne(
+            { _id: conversation._id },
+            {
+              $set: {
+                lastMessageDate: previousMessage.updatedAt,
+                lastMessageSender: previousMessage.sender,
+                lastMessageToOthers: previousMessage.text,
+              },
+            }
+          );
+        }
+      }
+    }
+    return await Message.deleteOne({ _id: messageId });
+  }
+
+  public async replyToMessage() {} // TODO
+
+  public async reactToMessage() {} // TODO
 }
 
 export default MessageService;

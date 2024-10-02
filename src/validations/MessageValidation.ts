@@ -35,6 +35,10 @@ class MessageValidation {
   editRules() {
     return validate([this.messageId(), this.text()]);
   }
+
+  unsendRules() {
+    return validate([this.messageId()]);
+  }
 }
 
 export default MessageValidation;

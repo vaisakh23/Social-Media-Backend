@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import Controller from "../decorators/controller";
-import { Post, Put } from "../decorators/methods";
+import { Delete, Post, Put } from "../decorators/methods";
 import { authenticateUser } from "../middlewares/authenticateUser";
 import MessageService from "../services/MessageService";
 import ApiResponse from "../utils/ApiResponse";
@@ -37,6 +37,22 @@ class MessageController {
       text
     );
     return ApiResponse.success(res, updatedMessage, "Message Updated", 200);
+  }
+
+  @Delete("/:messageId", [messageValidation.unsendRules()])
+  public async unsendMessage(req: Request, res: Response) {
+    const { messageId } = req.params;
+    const authUser = res.locals.user;
+    const message = await this.messageService.unsendMessage(
+      messageId,
+      authUser._id
+    );
+    return ApiResponse.success(
+      res,
+      undefined,
+      "Message unsent successfully",
+      200
+    );
   }
 }
 
