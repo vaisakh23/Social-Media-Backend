@@ -20,22 +20,6 @@ const conversationSchema: Schema = new Schema<ConversationType>(
       type: Schema.Types.ObjectId,
       ref: "Group",
     },
-    lastMessageDate: {
-      type: Date,
-      required: true,
-    },
-    lastMessageSender: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    lastMessageToOthers: {
-      type: String,
-      required: true,
-    },
-    lastMessageToSender: {
-      type: String,
-    },
   },
   schemaOptions
 );

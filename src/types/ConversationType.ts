@@ -10,10 +10,6 @@ type ConversationType = Document & {
   type: ConversationTypes;
   members: Schema.Types.ObjectId[]; // References to User documents
   group?: Schema.Types.ObjectId; // Reference to Group document
-  lastMessageDate: Date;
-  lastMessageSender: Schema.Types.ObjectId;
-  lastMessageToOthers: string;
-  lastMessageToSender: string;
 } & Document<unknown, {}, ConversationType>;
 
 export default ConversationType;

@@ -46,10 +46,6 @@ class ConversationService {
       type: ConversationTypes.GROUP,
       group: group._id,
       members: insertedMembers,
-      lastMessageDate: new Date(),
-      lastMessageSender: authUser.id,
-      lastMessageToOthers: `Group created by ${authUser.username}`, // Todo - instead get latest Message stored in frontend
-      lastMessageToSender: "Group created by you",
     });
 
     await conversation.save();
@@ -64,7 +60,7 @@ class ConversationService {
 
     await message.save();
 
-    return { conversation, message };
+    return { conversation };
   }
 }
 

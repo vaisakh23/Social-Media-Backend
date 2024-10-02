@@ -21,17 +21,16 @@ class ConversationController {
     const { groupName, members, image } = req.body;
     const authUser = res.locals.user;
 
-    const { conversation, message } =
-      await this.conversationService.startGroupChat({
-        authUser,
-        groupName,
-        members,
-        groupImage: image,
-      });
+    const { conversation } = await this.conversationService.startGroupChat({
+      authUser,
+      groupName,
+      members,
+      groupImage: image,
+    });
 
     return ApiResponse.success(
       res,
-      { conversation, message },
+      conversation,
       "Group chat started successfully.",
       201
     );
