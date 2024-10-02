@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 import { validate } from "../utils/validate";
 
 class MessageValidation {
@@ -20,8 +20,20 @@ class MessageValidation {
       .withMessage("Message text must be a string.");
   }
 
+  messageId() {
+    return param("messageId")
+      .notEmpty()
+      .withMessage("Message ID is required.")
+      .isMongoId()
+      .withMessage("Message ID must be a valid Mongo ID.");
+  }
+
   sendMessageRules() {
     return validate([this.conversationId(), this.text()]);
+  }
+
+  editRules() {
+    return validate([this.messageId(), this.text()]);
   }
 }
 

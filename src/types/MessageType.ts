@@ -16,6 +16,8 @@ type MessageType = Document & {
   systemMessageToSender?: string;
   systemMessageToReceiver?: string;
   createdAt?: Date;
+  updatedAt?: Date;
+  edited: boolean;
 } & Document<unknown, {}, MessageType>;
 
 export default MessageType;

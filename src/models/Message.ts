@@ -38,6 +38,10 @@ const messageSchema: Schema = new Schema<MessageType>(
     systemMessageToReceiver: {
       type: String,
     },
+    edited: {
+      type: Boolean,
+      default: false,
+    },
   },
   schemaOptions
 );

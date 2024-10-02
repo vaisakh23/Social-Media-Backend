@@ -49,6 +49,48 @@ class MessageService {
 
     return message;
   }
+
+  public async editMessage(messageId: string, userId: string, newText: string) {
+    // Find the message and check if the user is the original sender
+    const message = await Message.findOne({ _id: messageId });
+
+    if (!message) {
+      throw new HttpException("Message not found", 404);
+    }
+
+    if (message.sender?.toString() !== userId.toString()) {
+      throw new HttpException("You can only edit your own messages.", 403);
+    }
+
+    message.text = newText;
+    message.edited = true;
+    const latMessageUpdatedAT = message.updatedAt?.toISOString(); // Store last updated date before editing
+    await message.save();
+
+    const conversation = await Conversation.findOne({
+      _id: message.conversation,
+    });
+    // Check if the edited message is the last message in the conversation
+    if (
+      conversation?.lastMessageSender.toString() === userId.toString() &&
+      (message.createdAt?.toISOString() ===
+        conversation.lastMessageDate.toISOString() ||
+        latMessageUpdatedAT === conversation.lastMessageDate.toISOString()) // For repeted editing
+    ) {
+      // Update conversation's last message if the edited message is the last one
+      await Conversation.updateOne(
+        { _id: conversation._id },
+        {
+          $set: {
+            lastMessageToOthers: newText,
+            lastMessageDate: message.updatedAt,
+          },
+        }
+      );
+    }
+
+    return message;
+  }
 }
 
 export default MessageService;
