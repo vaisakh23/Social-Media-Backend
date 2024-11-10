@@ -5,7 +5,10 @@
   group: "reference - group";
 
   lastMessageDate: "";
-  lastMessage: "";
+  lastMessageSender: "reference - user"
+  // lastMessageToOthers: "";
+  // lastMessageToSender: "";
+  lastMessage: "reference - message" // Todo
   // conditional fields
   name: "";
   image: "";
@@ -40,7 +43,19 @@
   media: "";
   reciver: "reference - user";
   systemMessageToOthers: "";
-  systemMessageToSender: "";
+  systemMessageToSender: "";  // Tode - write the logic to show wich msg to auth user in backend itself, just update it when returning object from api
   systemMessageToReciever: "";
   timeStamp: "";
 }
+// TODO
+// api to get coversations of a user with last message loaded
+// api to get messages of a converstion - get based on the member since date
+// one to one chat
+// Todo - message send , read field  - blue tick
+/* Todo - when member get removed from group show only 'you been removed from grop' in frontend 
+- user can remove the chat then */
+
+
+
+// Imaginations
+// punch on message to break it , make it ice blowing - reacting to a message
