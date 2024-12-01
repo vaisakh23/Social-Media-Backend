@@ -20,7 +20,7 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - ../dbdata6:/data/db
+      - dbdata6:/data/db
     networks:
       - socialmedia
 

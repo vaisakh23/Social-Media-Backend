@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import Conversation from "../models/Conversation";
 import Group from "../models/Group";
 import Member from "../models/Member";
@@ -61,6 +62,213 @@ class ConversationService {
     await message.save();
 
     return { conversation };
+  }
+
+  public async listUserConversations(userId: string) {
+    const conversations = await Conversation.aggregate([
+      // Populate members with user details
+      {
+        $lookup: {
+          from: "members", // Join with the `Member` collection
+          let: { memberIds: "$members" }, // Pass the `members` array from Conversation
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$_id", "$$memberIds"], // Match `_id` in Member with `members` in Conversation
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                let: { userId: "$user" }, // Use the `user` field from `Member`
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$_id", "$$userId"], // Match the user ID in `User`
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 1,
+                      fullname: 1,
+                      username: 1,
+                      avatar: 1,
+                    },
+                  },
+                ],
+                as: "userDetails",
+              },
+            },
+            {
+              $addFields: {
+                user: { $arrayElemAt: ["$userDetails", 0] }, // Embed the user details directly in `user`
+              },
+            },
+            {
+              $project: { userDetails: 0 },
+            },
+          ],
+          as: "memberDetails",
+        },
+      },
+      // *** Match conversations where the user is part of the members
+      {
+        $match: {
+          "memberDetails.user._id": new Types.ObjectId(userId),
+        },
+      },
+      // Fetch the last message for each conversation
+      {
+        $lookup: {
+          from: "messages", // Join with the `Message` collection
+          let: { conversationId: "$_id" }, // Define the conversation ID
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$conversation", "$$conversationId"], // Match messages for the current conversation
+                },
+              },
+            },
+            { $sort: { createdAt: -1 } }, // Sort messages by creation time (latest first)
+            { $limit: 1 }, // Limit to the most recent message
+          ],
+          as: "lastMessage", // Output the result to the `lastMessage` field
+        },
+      },
+      {
+        $unwind: {
+          path: "$lastMessage", // Unwind the `lastMessage` array
+          preserveNullAndEmptyArrays: true, // Preserve conversations without messages
+        },
+      },
+      // Update the text field for the auth user
+      {
+        $addFields: {
+          "lastMessage.text": {
+            $cond: [
+              { $eq: ["$lastMessage.type", MessageTypes.SYSTEM] }, // Check if the type is 'system'
+              {
+                $cond: [
+                  { $eq: ["$lastMessage.sender", new Types.ObjectId(userId)] }, // If sender is the user
+                  "$lastMessage.systemMessageToSender", // Use systemMessageToSender
+                  {
+                    $cond: [
+                      {
+                        $eq: [
+                          "$lastMessage.receiver",
+                          new Types.ObjectId(userId),
+                        ],
+                      }, // If receiver is the user
+                      "$lastMessage.systemMessageToReceiver", // Use systemMessageToReceiver
+                      "$lastMessage.systemMessageToOthers", // Otherwise use systemMessageToOthers
+                    ],
+                  },
+                ],
+              },
+              "$lastMessage.text", // Retain the original `text` if `type` is not 'system'
+            ],
+          },
+        },
+      },
+      // Fetch group details for group conversations
+      {
+        $lookup: {
+          from: "groups",
+          localField: "group",
+          foreignField: "_id",
+          as: "groupDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$groupDetails", // Unwind `groupDetails`
+          preserveNullAndEmptyArrays: true, // Preserve one-to-one conversations without groups
+        },
+      },
+      // Add dynamic name and image fields
+      {
+        $addFields: {
+          name: {
+            $cond: [
+              { $eq: ["$type", "group"] }, // If conversation type is group
+              "$groupDetails.name", // Use group name
+              {
+                $arrayElemAt: [
+                  {
+                    $map: {
+                      input: {
+                        $filter: {
+                          input: "$memberDetails", // Iterate through members
+                          as: "member",
+                          cond: {
+                            $ne: [
+                              "$$member.user._id",
+                              new Types.ObjectId(userId),
+                            ],
+                          }, // Exclude current user's ID
+                        },
+                      },
+                      as: "filteredMember",
+                      in: "$$filteredMember.user.username", // Extract only the fullname of the filtered member
+                    },
+                  },
+                  0, // Take the first element of the mapped array
+                ],
+              }, // Otherwise use the filtered member's name
+            ],
+          },
+          image: {
+            $cond: [
+              { $eq: ["$type", "group"] }, // If conversation type is group
+              "$groupDetails.image", // Use group image
+              {
+                $arrayElemAt: [
+                  {
+                    $map: {
+                      input: {
+                        $filter: {
+                          input: "$memberDetails", // Iterate through members
+                          as: "member",
+                          cond: {
+                            $ne: [
+                              "$$member.user._id",
+                              new Types.ObjectId(userId),
+                            ],
+                          }, // Exclude current user's ID
+                        },
+                      },
+                      as: "filteredMember",
+                      in: "$$filteredMember.user.avatar", // Extract only the avatar of the filtered member
+                    },
+                  },
+                  0, // Take the first element of the mapped array
+                ],
+              }, // Otherwise use the filtered member's avatar
+            ],
+          },
+        },
+      },
+      // Project specific fields
+      {
+        $project: {
+          _id: 1,
+          type: 1,
+          group: "$groupDetails", // Include group details
+          members: "$memberDetails", // Include members as user references
+          lastMessage: "$lastMessage",
+          name: 1,
+          image: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+    ]);
+    return conversations;
   }
 }
 
