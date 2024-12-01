@@ -12,7 +12,7 @@ const conversationSchema: Schema = new Schema<ConversationType>(
     members: [
       {
         type: Schema.Types.ObjectId,
-        ref: "User",
+        ref: "Member",
         required: true,
       },
     ],

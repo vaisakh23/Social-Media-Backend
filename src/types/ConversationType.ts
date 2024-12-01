@@ -8,7 +8,7 @@ export enum ConversationTypes {
 type ConversationType = Document & {
   _id: string;
   type: ConversationTypes;
-  members: Schema.Types.ObjectId[]; // References to User documents
+  members: Schema.Types.ObjectId[]; // References to Member documents
   group?: Schema.Types.ObjectId; // Reference to Group document
 } & Document<unknown, {}, ConversationType>;
 

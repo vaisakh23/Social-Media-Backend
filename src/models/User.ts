@@ -43,19 +43,19 @@ const userSchema: Schema = new Schema<UserType>(
     },
     mobile: {
       type: String,
-      default: "",
+      default: null,
     },
     followers: [
       {
         type: Schema.Types.ObjectId,
-        default:[],
+        default: [],
         ref: "User",
       },
     ],
     following: [
       {
         type: Schema.Types.ObjectId,
-        default:[],
+        default: [],
         ref: "User",
       },
     ],

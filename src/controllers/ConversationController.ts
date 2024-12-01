@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import Controller from "../decorators/controller";
-import { Post } from "../decorators/methods";
+import { Get, Post } from "../decorators/methods";
 import { authenticateUser } from "../middlewares/authenticateUser";
+import uploadMiddleware from "../middlewares/uploadMiddleware";
 import ConversationService from "../services/ConversationService";
 import ApiResponse from "../utils/ApiResponse";
 import ConversationValidation from "../validations/ConversationValidation";
-import uploadMiddleware from "../middlewares/uploadMiddleware";
 
 const conversationValidation = new ConversationValidation();
 
@@ -33,6 +33,22 @@ class ConversationController {
       conversation,
       "Group chat started successfully.",
       201
+    );
+  }
+
+  @Get("/")
+  public async listConversations(req: Request, res: Response) {
+    const authUser = res.locals.user;
+
+    const conversations = await this.conversationService.listUserConversations(
+      authUser.id
+    );
+
+    return ApiResponse.success(
+      res,
+      conversations,
+      "Conversations retrieved successfully.",
+      200
     );
   }
 }
