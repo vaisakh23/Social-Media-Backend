@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import HttpException from "../exceptions/HttpException";
 import Conversation from "../models/Conversation";
 import Group from "../models/Group";
 import Member from "../models/Member";
@@ -7,6 +8,7 @@ import { ConversationTypes } from "../types/ConversationType";
 import { MemberRoles } from "../types/MemberType";
 import { MessageTypes } from "../types/MessageType";
 import UserType from "../types/UserType";
+import ApiFeatures from "../utils/ApiFeatures";
 
 class ConversationService {
   public async startGroupChat({
@@ -269,6 +271,67 @@ class ConversationService {
       },
     ]);
     return conversations;
+  }
+
+  public async listConversationMessages(
+    conversationId: string,
+    userId: any,
+    queryString: any
+  ) {
+    // Fetch the conversation to get the list of member IDs
+    const conversation = await Conversation.findById(conversationId).select(
+      "members"
+    );
+
+    if (
+      !conversation ||
+      !conversation.members ||
+      conversation.members.length === 0
+    ) {
+      throw new HttpException("Conversation not found or has no members.", 404);
+    }
+
+    // Fetch the member details for the user in the conversation
+    const member = await Member.findOne({
+      user: userId,
+      _id: { $in: conversation.members }, // Ensure the member is part of the conversation
+    }).select("memberSince active");
+
+    if (!member) {
+      throw new HttpException(
+        "User is not a member of this conversation.",
+        404
+      );
+    }
+
+    if (!member.active) {
+      throw new HttpException(
+        "You have been removed from this group.",
+        403 // Forbidden status for a removed member
+      );
+    }
+
+    // Fetch messages for the conversation after the `memberSince` date
+    const messagesQuery = Message.find({
+      conversation: conversationId,
+      createdAt: { $gte: member.memberSince }, // Only messages after the member's join date
+    });
+
+    const searchFields = ["text"];
+    const apiFeature = new ApiFeatures(
+      messagesQuery,
+      queryString,
+      searchFields
+    );
+    const { page = 1, limit = 9 } = queryString;
+    const total = await apiFeature.countDocuments();
+    const messages = await apiFeature.executeQuery();
+    return {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      total,
+      messages,
+    };
   }
 }
 

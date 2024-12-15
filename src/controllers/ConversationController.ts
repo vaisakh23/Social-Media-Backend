@@ -51,6 +51,25 @@ class ConversationController {
       200
     );
   }
+
+  @Get("/:conversationId/messages")
+  public async listConversationMessages(req: Request, res: Response) {
+    const { conversationId } = req.params;
+    const authUser = res.locals.user;
+
+    const messages = await this.conversationService.listConversationMessages(
+      conversationId,
+      authUser.id,
+      req.query
+    );
+
+    return ApiResponse.success(
+      res,
+      messages,
+      "Messages for the conversation retrieved successfully.",
+      200
+    );
+  }
 }
 
 export default ConversationController;
