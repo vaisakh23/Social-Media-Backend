@@ -66,6 +66,57 @@ class ConversationService {
     return { conversation };
   }
 
+  public async startOneToOneChat({
+    senderId,
+    receiverId,
+    text,
+  }: {
+    senderId: string;
+    receiverId: string;
+    text: string;
+  }) {
+    // Ensure sender and receiver are not the same
+    if (senderId === receiverId) {
+      throw new HttpException(
+        "Sender and receiver cannot be the same user.",
+        400
+      );
+    }
+
+    // Check if a one-to-one conversation already exists between these users
+    let conversation = await Conversation.findOne({
+      type: ConversationTypes.ONETOONE,
+      members: { $all: [senderId, receiverId] }, // Ensure both users are part of the conversation
+    });
+
+    if (!conversation) {
+      // If no existing conversation, create a new one
+      const members = await Member.insertMany([
+        { user: senderId, role: MemberRoles.MEMBER, active: true },
+        { user: receiverId, role: MemberRoles.MEMBER, active: true },
+      ]);
+
+      conversation = new Conversation({
+        type: ConversationTypes.ONETOONE,
+        members,
+      });
+
+      await conversation.save();
+    }
+
+    // Create the first message for the conversation
+    const message = new Message({
+      type: MessageTypes.USER,
+      conversation: conversation._id,
+      sender: senderId,
+      text: text,
+    });
+
+    await message.save();
+
+    return { conversation };
+  }
+
   public async listUserConversations(userId: string) {
     const conversations = await Conversation.aggregate([
       // Populate members with user details

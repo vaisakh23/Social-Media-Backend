@@ -36,6 +36,27 @@ class ConversationController {
     );
   }
 
+  @Post("/start-onetoone-chat", [
+    conversationValidation.startOneToOneChatRules(),
+  ])
+  public async startOneToOneChat(req: Request, res: Response) {
+    const { receiverId, text } = req.body;
+    const authUser = res.locals.user;
+
+    const { conversation } = await this.conversationService.startOneToOneChat({
+      senderId: authUser.id,
+      receiverId,
+      text,
+    });
+
+    return ApiResponse.success(
+      res,
+      conversation,
+      "Onetoone chat started successfully.",
+      201
+    );
+  }
+
   @Get("/")
   public async listConversations(req: Request, res: Response) {
     const authUser = res.locals.user;

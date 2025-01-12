@@ -31,8 +31,36 @@ class ConversationValidation {
     return body("image").isString().withMessage("Image must be a string.");
   }
 
+  receiverId() {
+    return body("receiverId")
+      .notEmpty()
+      .withMessage("Receiver ID is required.")
+      .bail()
+      .isString()
+      .withMessage("Receiver ID must be a string.")
+      .bail()
+      .isMongoId()
+      .withMessage("Receiver ID must be a valid Mongo ID.");
+  }
+
+  text() {
+    return body("text")
+      .notEmpty()
+      .withMessage("Message text is required.")
+      .bail()
+      .isString()
+      .withMessage("Message text must be a string.")
+      .bail()
+      .isLength({ max: 500 })
+      .withMessage("Message text cannot exceed 500 characters.");
+  }
+
   startGroupChatRules() {
     return validate([this.groupName(), this.members(), this.image()]);
+  }
+
+  startOneToOneChatRules() {
+    return validate([this.receiverId(), this.text()]);
   }
 }
 
