@@ -15,6 +15,34 @@ import UserType from "../types/UserType";
 import { verifyRefreshToken } from "../utils/verifyRefreshToken";
 
 class AuthService {
+	/**
+	 * Secure Refresh Token Rotation System
+	 * ---------------------------------------------------
+	 * 🔐 Concept:
+	 * Each device that logs in creates a "session" stored in DB (UserToken).
+	 * A session is identified by a stable `jti` (per device), while the
+	 * refresh token itself is rotated (replaced) every time it is used.
+	 *
+	 * Only the latest (hashed) refresh token is stored for that device.
+	 * If a previous token is ever reused, the session is revoked and the
+	 * user must log in again — protecting against stolen token attacks.
+	 *
+	 * 🧩 Key Security Features Implemented:
+	 * - Multi-device login: one session per device (via unique jti)
+	 * - Token rotation: new refresh token issued every refresh request
+	 * - Token reuse detection: hash mismatch = token stolen → revoke
+	 * - Revocation flag: allows logout on specific device only
+	 * - Metadata tracking: device info, IP, user-agent for monitoring
+	 *
+	 * 🔁 Session Lifecycle:
+	 * - Login → Create session for device → Store hashed refresh token
+	 * - Refresh request → Validate session + rotate token
+	 * - Logout or breach → Mark session revoked → block further token usage
+	 *
+	 * This approach ensures strong protection against replay attacks while
+	 * supporting a smooth user experience across multiple devices.
+	 */
+
 	private user = User;
 	private userToken = UserToken;
 
@@ -69,6 +97,7 @@ class AuthService {
 		// 2️⃣ Find refresh token session in DB
 		const tokenDoc = await this.userToken.findOne({ user: userId, jti });
 		if (!tokenDoc) {
+			// Not gonna happen if happens
 			// TODO: Log a "security breach alert" for admin monitoring
 			throw new UnauthorizedException("Invalid refresh token");
 		}
@@ -104,7 +133,7 @@ class AuthService {
 		tokenDoc.tokenHash = newHash;
 		await tokenDoc.save();
 
-    // 7️⃣ Issue new access token
+		// 7️⃣ Issue new access token
 		const newAccessToken = jwt.sign({ _id: userId }, ACCESS_TOKEN_SECRET, {
 			expiresIn: ACCESS_TOKEN_TIMOUT,
 		});
