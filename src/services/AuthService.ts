@@ -12,7 +12,7 @@ import UnauthorizedException from "../exceptions/UnauthorizedException";
 import User from "../models/User";
 import UserToken from "../models/UserToken";
 import UserType from "../types/UserType";
-import { verifyRefreshToken } from "../utils/verifyRefreshToken";
+
 
 class AuthService {
 	/**
@@ -61,8 +61,18 @@ class AuthService {
 			...userData,
 			password: hashedPassword,
 		});
+
+		const jti = uuidv4();
+		const tokens = await this.generateTokens(userData._id, jti);
+		const tokenHash = await bcryptHash(tokens.refreshToken, 10);
+		await this.userToken.create({
+			user: userData._id,
+			jti,
+			tokenHash,
+			...reqInfo,
+		});
+
 		const userObject = createUserData.toObject();
-		const tokens = await this.generateTokens(userObject, reqInfo);
 		return { user: userObject, ...tokens };
 	}
 
@@ -86,15 +96,8 @@ class AuthService {
 			jti = uuidv4();
 		}
 
-		const newAccessToken = jwt.sign({ _id }, ACCESS_TOKEN_SECRET, {
-			expiresIn: ACCESS_TOKEN_TIMOUT,
-		});
-
-		const newRefreshToken = jwt.sign({ _id, jti }, REFRESH_TOKEN_SECRET, {
-			expiresIn: REFRESH_TOKEN_TIMOUT,
-		});
-
-		const tokenHash = await bcryptHash(newRefreshToken, 10);
+		const tokens = await this.generateTokens(_id, jti);
+		const tokenHash = await bcryptHash(tokens.refreshToken, 10);
 
 		if (existingSession) {
 			// Replace old token hash → "re-login same device"
@@ -110,7 +113,11 @@ class AuthService {
 				...reqInfo,
 			});
 		}
-		return { user, accessToken: newAccessToken, refreshToken: newRefreshToken };
+		return {
+			user,
+			accessToken: tokens.accessToken,
+			refreshToken: tokens.refreshToken,
+		};
 	}
 
 	/**
@@ -163,69 +170,52 @@ class AuthService {
 		}
 
 		// 6️⃣ Rotate token — jti remains the same for device
-		const newRefreshToken = jwt.sign(
-			{ _id: userId, jti },
-			REFRESH_TOKEN_SECRET,
-			{ expiresIn: REFRESH_TOKEN_TIMOUT }
-		);
-		const newHash = await bcryptHash(newRefreshToken, 10);
+		const tokens = await this.generateTokens(userId, jti);
+		const newHash = await bcryptHash(tokens.refreshToken, 10);
 
 		tokenDoc.tokenHash = newHash;
 		await tokenDoc.save();
 
-		// 7️⃣ Issue new access token
-		const newAccessToken = jwt.sign({ _id: userId }, ACCESS_TOKEN_SECRET, {
-			expiresIn: ACCESS_TOKEN_TIMOUT,
-		});
-
-		return { accessToken: newAccessToken, refreshToken: newRefreshToken };
-	}
-
-	private async generateTokens(user: any, reqInfo: any) {
-		/** TODO
-		 * Change the payload - Store role permision
-		 */
-		const { _id } = user;
-		const accessToken = jwt.sign({ _id }, ACCESS_TOKEN_SECRET, {
-			expiresIn: ACCESS_TOKEN_TIMOUT,
-		});
-
-		const jti = uuidv4();
-		const refreshToken = jwt.sign({ _id, jti }, REFRESH_TOKEN_SECRET, {
-			expiresIn: REFRESH_TOKEN_TIMOUT,
-		});
-
-		const tokenHash = await bcryptHash(refreshToken, 10);
-
-		await this.userToken.create({
-			user: _id,
-			jti,
-			tokenHash,
-			...reqInfo,
-		});
-
-		return { accessToken, refreshToken };
+		return {
+			accessToken: tokens.accessToken,
+			refreshToken: tokens.refreshToken,
+		};
 	}
 
 	public async logout(refreshToken: string) {
-    let payload: any;
+		let payload: any;
 
-    try {
-      payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, {
-        ignoreExpiration: true,
-      });
-    } catch (error) {
-      throw new UnauthorizedException("Invalid refresh token");
-    }
+		try {
+			payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, {
+				ignoreExpiration: true,
+			});
+		} catch (error) {
+			throw new UnauthorizedException("Invalid refresh token");
+		}
 
-    const { _id: userId, jti } = payload;
-    const tokenDoc = await this.userToken.findOne({ user: userId, jti });
+		const { _id: userId, jti } = payload;
+		const tokenDoc = await this.userToken.findOne({ user: userId, jti });
 		if (!tokenDoc) {
 			throw new UnauthorizedException("Invalid refresh token");
 		}
 
 		tokenDoc.revoked = true;
 		await tokenDoc.save();
+	}
+
+	private async generateTokens(userId: string, jti: string) {
+		/** TODO
+		 * Change the payload - Store role permision
+		 */
+		const accessToken = jwt.sign({ _id: userId }, ACCESS_TOKEN_SECRET, {
+			expiresIn: ACCESS_TOKEN_TIMOUT,
+		});
+
+		const refreshToken = jwt.sign({ _id: userId, jti }, REFRESH_TOKEN_SECRET, {
+			expiresIn: REFRESH_TOKEN_TIMOUT,
+		});
+
+		return { accessToken, refreshToken };
 	}
 }
 
