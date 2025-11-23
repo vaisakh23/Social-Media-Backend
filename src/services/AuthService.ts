@@ -67,8 +67,50 @@ class AuthService {
 	}
 
 	public async login(user: UserType, reqInfo: any) {
-		const tokens = await this.generateTokens(user, reqInfo);
-		return { user, ...tokens };
+		const { _id } = user;
+
+		// **Check for existing active session on this device**
+		const existingSession = await this.userToken.findOne({
+			user: _id,
+			userAgent: reqInfo.userAgent,
+			ip: reqInfo.ip,
+			// revoked: false,
+		});
+
+		// Unique identifier for refresh token session
+		// Note: Here each browser/device gets its own session (jti)
+		let jti;
+		if (existingSession) {
+			jti = existingSession.jti;
+		} else {
+			jti = uuidv4();
+		}
+
+		const newAccessToken = jwt.sign({ _id }, ACCESS_TOKEN_SECRET, {
+			expiresIn: ACCESS_TOKEN_TIMOUT,
+		});
+
+		const newRefreshToken = jwt.sign({ _id, jti }, REFRESH_TOKEN_SECRET, {
+			expiresIn: REFRESH_TOKEN_TIMOUT,
+		});
+
+		const tokenHash = await bcryptHash(newRefreshToken, 10);
+
+		if (existingSession) {
+			// Replace old token hash → "re-login same device"
+			existingSession.tokenHash = tokenHash;
+			existingSession.revoked = false;
+			await existingSession.save();
+		} else {
+			// Create new device/browser session
+			await this.userToken.create({
+				user: _id,
+				jti,
+				tokenHash,
+				...reqInfo,
+			});
+		}
+		return { user, accessToken: newAccessToken, refreshToken: newRefreshToken };
 	}
 
 	/**
@@ -97,8 +139,6 @@ class AuthService {
 		// 2️⃣ Find refresh token session in DB
 		const tokenDoc = await this.userToken.findOne({ user: userId, jti });
 		if (!tokenDoc) {
-			// Not gonna happen if happens
-			// TODO: Log a "security breach alert" for admin monitoring
 			throw new UnauthorizedException("Invalid refresh token");
 		}
 
