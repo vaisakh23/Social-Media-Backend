@@ -183,8 +183,7 @@ class AuthService {
 
 	private async generateTokens(user: any, reqInfo: any) {
 		/** TODO
-		 * Change the payload
-		 * Remove the email ,store role permision
+		 * Change the payload - Store role permision
 		 */
 		const { _id } = user;
 		const accessToken = jwt.sign({ _id }, ACCESS_TOKEN_SECRET, {
@@ -192,7 +191,6 @@ class AuthService {
 		});
 
 		const jti = uuidv4();
-		// user id , email not need for that
 		const refreshToken = jwt.sign({ _id, jti }, REFRESH_TOKEN_SECRET, {
 			expiresIn: REFRESH_TOKEN_TIMOUT,
 		});
@@ -210,14 +208,22 @@ class AuthService {
 	}
 
 	public async logout(refreshToken: string) {
-		const payload: any = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
-		const tokenDoc = await this.userToken.findOne({
-			user: payload._id,
-			jti: payload.jti,
-		});
+    let payload: any;
+
+    try {
+      payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, {
+        ignoreExpiration: true,
+      });
+    } catch (error) {
+      throw new UnauthorizedException("Invalid refresh token");
+    }
+
+    const { _id: userId, jti } = payload;
+    const tokenDoc = await this.userToken.findOne({ user: userId, jti });
 		if (!tokenDoc) {
 			throw new UnauthorizedException("Invalid refresh token");
 		}
+
 		tokenDoc.revoked = true;
 		await tokenDoc.save();
 	}
