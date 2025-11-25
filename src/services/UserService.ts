@@ -3,12 +3,14 @@ import HttpException from "../exceptions/HttpException";
 import NotFoundException from "../exceptions/NotFoundException";
 import PermissionException from "../exceptions/PermissionException";
 import User from "../models/User";
+import UserToken from "../models/UserToken";
 import UserType from "../types/UserType";
-import { UserRoles } from "../utils/UserRoles";
 import ApiFeatures from "../utils/ApiFeatures";
+import { UserRoles } from "../utils/UserRoles";
 
 class UserService {
   public users = User;
+  private userToken = UserToken;
 
   public async findAllUser(queryString: any) {
     const searchFields = ["fullname", "username", "email", "mobile"];
@@ -118,6 +120,32 @@ class UserService {
     );
     return updatedUser;
   }
+
+	// **Return all active (non-revoked) sessions for the user**
+	public async getActiveSessions(userId: string) {
+		const sessions = await this.userToken
+			.find({ user: userId, revoked: false }, "-tokenHash")
+			.sort({ createdAt: -1 });
+		return sessions;
+	}
+
+	// **Return all revoked sessions for the user**
+	public async getRevokedSessions(userId: string) {
+		const sessions = await this.userToken
+			.find({ user: userId, revoked: false }, "-tokenHash")
+			.sort({ createdAt: -1 });
+		return sessions;
+	}
+
+	// **Hard delete a specific active session for a user**
+	public async deleteSession(userId: string, jti: string) {
+		await this.userToken.deleteOne({ user: userId, jti });
+	}
+
+	// **Hard delete all sessions for the user (Include current session)**
+	public async deleteAllSessions(userId: string) {
+		await this.userToken.deleteMany({ user: userId });
+	}
 
   ownerOrAdminOnly(authUser: UserType, foundUser: UserType) {
     if (authUser.role != UserRoles.ADMIN && authUser._id != foundUser._id) {
