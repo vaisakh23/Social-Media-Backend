@@ -1,11 +1,11 @@
 import { compare as bcryptCompare, hash as bcryptHash } from "bcrypt";
+import { randomUUID } from 'crypto';
 import jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from "uuid";
 import {
-	ACCESS_TOKEN_SECRET,
-	ACCESS_TOKEN_TIMOUT,
-	REFRESH_TOKEN_SECRET,
-	REFRESH_TOKEN_TIMOUT,
+  ACCESS_TOKEN_SECRET,
+  ACCESS_TOKEN_TIMOUT,
+  REFRESH_TOKEN_SECRET,
+  REFRESH_TOKEN_TIMOUT,
 } from "../configs";
 import HttpException from "../exceptions/HttpException";
 import UnauthorizedException from "../exceptions/UnauthorizedException";
@@ -62,7 +62,7 @@ class AuthService {
 			password: hashedPassword,
 		});
 
-		const jti = uuidv4();
+		const jti = randomUUID();
 		const tokens = await this.generateTokens(userData._id, jti);
 		const tokenHash = await bcryptHash(tokens.refreshToken, 10);
 		await this.userToken.create({
@@ -93,7 +93,7 @@ class AuthService {
 		if (existingSession) {
 			jti = existingSession.jti;
 		} else {
-			jti = uuidv4();
+			jti = randomUUID();
 		}
 
 		const tokens = await this.generateTokens(_id, jti);
