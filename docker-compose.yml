@@ -15,7 +15,7 @@ services:
       - socialmedia
 
   mongodb:
-    image: mvertes/alpine-mongo
+    image: mongo:8.2.2-noble
     container_name: mongo
     ports:
       - 27017:27017
@@ -25,7 +25,7 @@ services:
       - socialmedia
 
   minio-local:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
     restart: always
     container_name: minio-local
     volumes:
