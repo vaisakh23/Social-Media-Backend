@@ -1,18 +1,17 @@
-import { compare as bcryptCompare, hash as bcryptHash } from "bcrypt";
-import { randomUUID } from 'crypto';
+import { hash as bcryptHash } from "bcrypt";
+import { createHash, randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 import {
-  ACCESS_TOKEN_SECRET,
-  ACCESS_TOKEN_TIMOUT,
-  REFRESH_TOKEN_SECRET,
-  REFRESH_TOKEN_TIMOUT,
+	ACCESS_TOKEN_SECRET,
+	ACCESS_TOKEN_TIMOUT,
+	REFRESH_TOKEN_SECRET,
+	REFRESH_TOKEN_TIMOUT,
 } from "../configs";
 import HttpException from "../exceptions/HttpException";
 import UnauthorizedException from "../exceptions/UnauthorizedException";
 import User from "../models/User";
 import UserToken from "../models/UserToken";
 import UserType from "../types/UserType";
-
 
 class AuthService {
 	/**
@@ -63,10 +62,10 @@ class AuthService {
 		});
 
 		const jti = randomUUID();
-		const tokens = await this.generateTokens(userData._id, jti);
-		const tokenHash = await bcryptHash(tokens.refreshToken, 10);
+		const tokens = await this.generateTokens(createUserData._id, jti);
+		const tokenHash = this.createTokenHash(tokens.refreshToken);
 		await this.userToken.create({
-			user: userData._id,
+			user: createUserData._id,
 			jti,
 			tokenHash,
 			...reqInfo,
@@ -97,7 +96,7 @@ class AuthService {
 		}
 
 		const tokens = await this.generateTokens(_id, jti);
-		const tokenHash = await bcryptHash(tokens.refreshToken, 10);
+		const tokenHash = this.createTokenHash(tokens.refreshToken);
 
 		if (existingSession) {
 			// Replace old token hash → "re-login same device"
@@ -155,7 +154,7 @@ class AuthService {
 		}
 
 		// 4️⃣ Detect token reuse by hash mismatch
-		const isMatch = await bcryptCompare(refreshToken, tokenDoc.tokenHash);
+		const isMatch = this.compareTokenHash(refreshToken, tokenDoc.tokenHash);
 		if (!isMatch) {
 			tokenDoc.revoked = true;
 			await tokenDoc.save();
@@ -171,7 +170,7 @@ class AuthService {
 
 		// 6️⃣ Rotate token — jti remains the same for device
 		const tokens = await this.generateTokens(userId, jti);
-		const newHash = await bcryptHash(tokens.refreshToken, 10);
+		const newHash = this.createTokenHash(tokens.refreshToken);
 
 		tokenDoc.tokenHash = newHash;
 		await tokenDoc.save();
@@ -216,6 +215,15 @@ class AuthService {
 		});
 
 		return { accessToken, refreshToken };
+	}
+
+	private createTokenHash(token: string) {
+		return createHash("sha256").update(token).digest("hex");
+	}
+
+	private compareTokenHash(incomingToken: string, hashedToken: string) {
+		const incomingTokenHash = this.createTokenHash(incomingToken);
+		return incomingTokenHash === hashedToken;
 	}
 }
 
