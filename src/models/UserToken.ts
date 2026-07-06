@@ -4,13 +4,13 @@ import UserTokenType from "../types/UserTokenType";
 
 const UserTokenSchema = new Schema(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", require: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     jti: { type: String, required: true, index: true, unique: true },
     tokenHash: { type: String, required: true },
     ip: String,
     userAgent: String,
     deviceName: String,
-    revoked: { type: Boolean, default: false, require: true },
+    revoked: { type: Boolean, default: false, required: true },
   },
   schemaOptions
 );

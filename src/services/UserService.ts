@@ -8,6 +8,12 @@ import UserType from "../types/UserType";
 import ApiFeatures from "../utils/ApiFeatures";
 import { UserRoles } from "../utils/UserRoles";
 
+/**
+ * TODO -
+ * Remove unnesessory routes
+ * update all to me (updateme) - no need for ownerOrAdminOnly
+ */
+
 class UserService {
   public users = User;
   private userToken = UserToken;

@@ -13,7 +13,7 @@ import User from "../models/User";
 import UserToken from "../models/UserToken";
 import UserType from "../types/UserType";
 
-class AuthService {
+class  AuthService {
 	/**
 	 * Secure Refresh Token Rotation System
 	 * ---------------------------------------------------
